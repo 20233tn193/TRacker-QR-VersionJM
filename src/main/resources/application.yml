@@ -1,0 +1,41 @@
+spring:
+  application:
+    name: paqueteria-tracker-api
+  
+  security:
+    jwt:
+      secret: ${JWT_SECRET:miClaveSecretaSuperSeguraParaJWT12345678901234567890}
+      expiration: 86400000 # 24 horas en milisegundos
+  
+  servlet:
+    multipart:
+      max-file-size: 10MB
+      max-request-size: 10MB
+
+server:
+  port: 8080
+  servlet:
+    context-path: /api
+
+logging:
+  level:
+    com.tracker: DEBUG
+    org.springframework.security: DEBUG
+    org.springframework.data.mongodb: INFO
+
+app:
+  qr:
+    base-url: http://localhost:8080/api/paquetes
+  report:
+    output-dir: ./reports
+
+springdoc:
+  api-docs:
+    path: /api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+    enabled: true
+    operations-sorter: method
+    tags-sorter: alpha
+    try-it-out-enabled: true
+
