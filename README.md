@@ -433,3 +433,4 @@ Desarrollado para el curso de Arquitectura de Software - UTEZ
 **Versión:** 1.0.0  
 **Última actualización:** 2024
 
+# TRacker-QR-VersionJM
