@@ -2,6 +2,8 @@ package com.tracker.service;
 
 import com.google.cloud.Timestamp;
 import com.tracker.dto.UsuarioRequest;
+import com.tracker.dto.CrearEmpleadoRequest;
+import com.tracker.dto.ActualizarEmpleadoRequest;
 import com.tracker.model.Role;
 import com.tracker.model.Usuario;
 import com.tracker.repository.UsuarioRepository;
@@ -21,7 +23,15 @@ public class UsuarioService {
     @Autowired
     private PasswordEncoder passwordEncoder;
     
-    public Usuario crearUsuario(UsuarioRequest request) {
+    /**
+     * Crear empleado o administrador (solo por ADMIN)
+     */
+    public Usuario crearEmpleado(CrearEmpleadoRequest request) {
+        // Validar que el rol sea EMPLEADO o ADMINISTRADOR
+        if (request.getRol() != Role.EMPLEADO && request.getRol() != Role.ADMINISTRADOR) {
+            throw new RuntimeException("Solo se pueden crear usuarios con rol EMPLEADO o ADMINISTRADOR");
+        }
+
         if (usuarioRepository.existsByEmail(request.getEmail())) {
             throw new RuntimeException("El email ya está registrado");
         }
@@ -30,16 +40,19 @@ public class UsuarioService {
         usuario.setEmail(request.getEmail());
         usuario.setPassword(passwordEncoder.encode(request.getPassword()));
         usuario.setNombre(request.getNombre());
-        usuario.setApellidos(request.getApellidos());
+        usuario.setApellidoPaterno(request.getApellidoPaterno());
+        usuario.setApellidoMaterno(request.getApellidoMaterno());
+        usuario.setUbicacion(null); // Empleados/Admins no tienen ubicación
         usuario.setRol(request.getRol());
         usuario.setActivo(true);
+        usuario.setHabilitado2FA(true);
         usuario.setFechaCreacion(Timestamp.now());
         usuario.setFechaActualizacion(Timestamp.now());
-        
+
         return usuarioRepository.save(usuario);
     }
     
-    public Usuario actualizarUsuario(String id, UsuarioRequest request) {
+    public Usuario actualizarUsuario(String id, CrearEmpleadoRequest request) {
         Optional<Usuario> usuarioOpt = usuarioRepository.findById(id);
         if (usuarioOpt.isEmpty()) {
             throw new RuntimeException("Usuario no encontrado");
@@ -58,9 +71,37 @@ public class UsuarioService {
             usuario.setPassword(passwordEncoder.encode(request.getPassword()));
         }
         usuario.setNombre(request.getNombre());
-        usuario.setApellidos(request.getApellidos());
+        usuario.setApellidoPaterno(request.getApellidoPaterno());
+        usuario.setApellidoMaterno(request.getApellidoMaterno());
+        // No actualizar ubicación para empleados/admins
         usuario.setRol(request.getRol());
         usuario.setFechaActualizacion(Timestamp.now());
+        
+        return usuarioRepository.save(usuario);
+    }
+
+    /**
+     * Actualizar solo datos del empleado (nombre, apellidos, email) sin cambiar rol ni contraseña
+     */
+    public Usuario actualizarDatosEmpleado(String id, ActualizarEmpleadoRequest request) {
+        Optional<Usuario> usuarioOpt = usuarioRepository.findById(id);
+        if (usuarioOpt.isEmpty()) {
+            throw new RuntimeException("Usuario no encontrado");
+        }
+        
+        Usuario usuario = usuarioOpt.get();
+        
+        // Verificar si el email cambió y no está en uso
+        if (!usuario.getEmail().equals(request.getEmail()) && 
+            usuarioRepository.existsByEmail(request.getEmail())) {
+            throw new RuntimeException("El email ya está en uso");
+        }
+        
+        usuario.setEmail(request.getEmail());
+        usuario.setNombre(request.getNombre());
+        usuario.setApellidoPaterno(request.getApellidoPaterno());
+        usuario.setApellidoMaterno(request.getApellidoMaterno());
+        usuario.setFechaActualizacion(Instant.now());
         
         return usuarioRepository.save(usuario);
     }

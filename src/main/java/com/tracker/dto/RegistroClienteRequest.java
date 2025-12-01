@@ -1,11 +1,9 @@
 package com.tracker.dto;
 
-import com.tracker.model.Role;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
 
-public class UsuarioRequest {
+public class RegistroClienteRequest {
     
     @NotBlank(message = "El email es obligatorio")
     @Email(message = "El email debe ser válido")
@@ -22,13 +20,11 @@ public class UsuarioRequest {
     
     private String apellidoMaterno; // Opcional
     
+    @NotBlank(message = "La ubicación es obligatoria")
     private String ubicacion; // Municipio de Morelos
     
-    @NotNull(message = "El rol es obligatorio")
-    private Role rol;
-    
     // Constructores
-    public UsuarioRequest() {}
+    public RegistroClienteRequest() {}
     
     // Getters y Setters
     public String getEmail() {
@@ -78,32 +74,4 @@ public class UsuarioRequest {
     public void setUbicacion(String ubicacion) {
         this.ubicacion = ubicacion;
     }
-    
-    public String getApellidos() {
-        // Para compatibilidad, retorna apellidos completos
-        if (apellidoMaterno != null && !apellidoMaterno.isEmpty()) {
-            return apellidoPaterno + " " + apellidoMaterno;
-        }
-        return apellidoPaterno;
-    }
-    
-    public void setApellidos(String apellidos) {
-        // Para compatibilidad, divide en paterno y materno si viene separado
-        if (apellidos != null && apellidos.contains(" ")) {
-            String[] partes = apellidos.split(" ", 2);
-            this.apellidoPaterno = partes[0];
-            this.apellidoMaterno = partes.length > 1 ? partes[1] : null;
-        } else {
-            this.apellidoPaterno = apellidos;
-        }
-    }
-    
-    public Role getRol() {
-        return rol;
-    }
-    
-    public void setRol(Role rol) {
-        this.rol = rol;
-    }
 }
-

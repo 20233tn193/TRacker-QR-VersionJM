@@ -3,6 +3,8 @@ package com.tracker.service;
 import com.google.cloud.Timestamp;
 import com.tracker.dto.LoginRequest;
 import com.tracker.dto.LoginResponse;
+import com.tracker.dto.RegistroClienteRequest;
+import com.tracker.model.Role;
 import com.tracker.model.Usuario;
 import com.tracker.repository.UsuarioRepository;
 import com.tracker.util.JwtUtil;
@@ -59,6 +61,11 @@ public class AuthService {
             if (request.getCodigo2FA() == null || request.getCodigo2FA().isEmpty()) {
                 LoginResponse response = new LoginResponse();
                 response.setRequiere2FA(true);
+                // Devolver datos del usuario aunque requiera 2FA, para que el frontend obtenga el userId
+                response.setId(usuario.getId());
+                response.setEmail(usuario.getEmail());
+                response.setNombre(usuario.getNombre());
+                response.setRol(usuario.getRol());
                 return response;
             }
             
@@ -150,6 +157,30 @@ public class AuthService {
         
         usuario.setHabilitado2FA(true);
         usuarioRepository.save(usuario);
+    }
+    
+    /**
+     * Registro público para clientes
+     */
+    public Usuario registrarCliente(RegistroClienteRequest request) {
+        if (usuarioRepository.existsByEmail(request.getEmail())) {
+            throw new RuntimeException("El email ya está registrado");
+        }
+        
+        Usuario usuario = new Usuario();
+        usuario.setEmail(request.getEmail());
+        usuario.setPassword(passwordEncoder.encode(request.getPassword()));
+        usuario.setNombre(request.getNombre());
+        usuario.setApellidoPaterno(request.getApellidoPaterno());
+        usuario.setApellidoMaterno(request.getApellidoMaterno());
+        usuario.setUbicacion(request.getUbicacion());
+        usuario.setRol(Role.CLIENTE); // Siempre CLIENTE
+        usuario.setActivo(true);
+        usuario.setHabilitado2FA(true); // Habilitar 2FA por defecto
+        usuario.setFechaCreacion(Timestamp.now());
+        usuario.setFechaActualizacion(Timestamp.now());
+        
+        return usuarioRepository.save(usuario);
     }
 }
 
