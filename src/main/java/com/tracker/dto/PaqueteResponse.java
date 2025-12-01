@@ -1,7 +1,7 @@
 package com.tracker.dto;
 
+import com.google.cloud.Timestamp;
 import com.tracker.model.EstadoPaquete;
-import java.time.Instant;
 import java.util.List;
 
 public class PaqueteResponse {
@@ -13,10 +13,10 @@ public class PaqueteResponse {
     private String clienteEmail;
     private String direccionOrigen;
     private String direccionDestino;
-    private Instant fechaCreacion;
-    private Instant fechaUltimaActualizacion;
+    private Timestamp fechaCreacion;
+    private Timestamp fechaUltimaActualizacion;
     private boolean confirmadoRecepcion;
-    private Instant fechaConfirmacionRecepcion;
+    private Timestamp fechaConfirmacionRecepcion;
     private List<MovimientoResponse> historialMovimientos;
     
     // Constructores
@@ -79,19 +79,19 @@ public class PaqueteResponse {
         this.direccionDestino = direccionDestino;
     }
     
-    public Instant getFechaCreacion() {
+    public Timestamp getFechaCreacion() {
         return fechaCreacion;
     }
     
-    public void setFechaCreacion(Instant fechaCreacion) {
+    public void setFechaCreacion(Timestamp fechaCreacion) {
         this.fechaCreacion = fechaCreacion;
     }
     
-    public Instant getFechaUltimaActualizacion() {
+    public Timestamp getFechaUltimaActualizacion() {
         return fechaUltimaActualizacion;
     }
     
-    public void setFechaUltimaActualizacion(Instant fechaUltimaActualizacion) {
+    public void setFechaUltimaActualizacion(Timestamp fechaUltimaActualizacion) {
         this.fechaUltimaActualizacion = fechaUltimaActualizacion;
     }
     
@@ -103,11 +103,11 @@ public class PaqueteResponse {
         this.confirmadoRecepcion = confirmadoRecepcion;
     }
     
-    public Instant getFechaConfirmacionRecepcion() {
+    public Timestamp getFechaConfirmacionRecepcion() {
         return fechaConfirmacionRecepcion;
     }
     
-    public void setFechaConfirmacionRecepcion(Instant fechaConfirmacionRecepcion) {
+    public void setFechaConfirmacionRecepcion(Timestamp fechaConfirmacionRecepcion) {
         this.fechaConfirmacionRecepcion = fechaConfirmacionRecepcion;
     }
     

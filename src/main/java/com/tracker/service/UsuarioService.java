@@ -1,5 +1,6 @@
 package com.tracker.service;
 
+import com.google.cloud.Timestamp;
 import com.tracker.dto.UsuarioRequest;
 import com.tracker.model.Role;
 import com.tracker.model.Usuario;
@@ -8,7 +9,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
-import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
 
@@ -33,8 +33,8 @@ public class UsuarioService {
         usuario.setApellidos(request.getApellidos());
         usuario.setRol(request.getRol());
         usuario.setActivo(true);
-        usuario.setFechaCreacion(Instant.now());
-        usuario.setFechaActualizacion(Instant.now());
+        usuario.setFechaCreacion(Timestamp.now());
+        usuario.setFechaActualizacion(Timestamp.now());
         
         return usuarioRepository.save(usuario);
     }
@@ -60,7 +60,7 @@ public class UsuarioService {
         usuario.setNombre(request.getNombre());
         usuario.setApellidos(request.getApellidos());
         usuario.setRol(request.getRol());
-        usuario.setFechaActualizacion(Instant.now());
+        usuario.setFechaActualizacion(Timestamp.now());
         
         return usuarioRepository.save(usuario);
     }
@@ -73,7 +73,7 @@ public class UsuarioService {
         
         Usuario usuario = usuarioOpt.get();
         usuario.setActivo(false);
-        usuario.setFechaActualizacion(Instant.now());
+        usuario.setFechaActualizacion(Timestamp.now());
         usuarioRepository.save(usuario);
     }
     
@@ -87,7 +87,7 @@ public class UsuarioService {
         usuario.setActivo(true);
         usuario.setIntentosFallidos(0);
         usuario.setBloqueadoHasta(null);
-        usuario.setFechaActualizacion(Instant.now());
+        usuario.setFechaActualizacion(Timestamp.now());
         usuarioRepository.save(usuario);
     }
     
