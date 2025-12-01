@@ -177,8 +177,8 @@ public class AuthService {
         usuario.setRol(Role.CLIENTE); // Siempre CLIENTE
         usuario.setActivo(true);
         usuario.setHabilitado2FA(true); // Habilitar 2FA por defecto
-        usuario.setFechaCreacion(Instant.now());
-        usuario.setFechaActualizacion(Instant.now());
+        usuario.setFechaCreacion(Timestamp.now());
+        usuario.setFechaActualizacion(Timestamp.now());
         
         return usuarioRepository.save(usuario);
     }
