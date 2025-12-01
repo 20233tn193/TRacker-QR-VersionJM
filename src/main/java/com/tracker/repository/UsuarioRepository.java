@@ -9,8 +9,6 @@ import com.tracker.model.Role;
 import com.tracker.model.Usuario;
 import org.springframework.stereotype.Repository;
 
-import java.time.Instant;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -32,13 +30,13 @@ public class UsuarioRepository {
     }
 
     public Usuario save(Usuario usuario) {
-        Instant now = Instant.now();
+        Timestamp now = Timestamp.now();
         if (usuario.getId() == null || usuario.getId().isBlank()) {
             usuario.setId(collection().document().getId());
             usuario.setFechaCreacion(now);
         }
         usuario.setFechaActualizacion(now);
-        
+
         try {
             // Convertir Usuario a Map para Firestore
             Map<String, Object> data = new HashMap<>();
@@ -53,7 +51,7 @@ public class UsuarioRepository {
             data.put("intentosFallidos", usuario.getIntentosFallidos());
             data.put("habilitado2FA", usuario.isHabilitado2FA());
             data.put("secret2FA", usuario.getSecret2FA());
-            
+
             // Convertir Instant a Timestamp para Firestore
             if (usuario.getFechaCreacion() != null) {
                 data.put("fechaCreacion", Timestamp.ofTimeSecondsAndNanos(
@@ -73,7 +71,7 @@ public class UsuarioRepository {
                     usuario.getBloqueadoHasta().getNano()
                 ));
             }
-            
+
             collection().document(usuario.getId()).set(data).get();
             return usuario;
         } catch (InterruptedException | ExecutionException e) {
@@ -176,7 +174,7 @@ public class UsuarioRepository {
         if (snapshot == null || !snapshot.exists()) {
             return null;
         }
-        
+
         Usuario usuario = new Usuario();
         usuario.setId(snapshot.getId());
         usuario.setEmail(snapshot.getString("email"));
@@ -185,41 +183,41 @@ public class UsuarioRepository {
         usuario.setApellidoPaterno(snapshot.getString("apellidoPaterno"));
         usuario.setApellidoMaterno(snapshot.getString("apellidoMaterno"));
         usuario.setUbicacion(snapshot.getString("ubicacion"));
-        
+
         // Convertir rol
         String rolStr = snapshot.getString("rol");
         if (rolStr != null) {
             usuario.setRol(Role.valueOf(rolStr));
         }
-        
+
         // Campos booleanos y numéricos
         Boolean activo = snapshot.getBoolean("activo");
         usuario.setActivo(activo != null ? activo : true);
-        
+
         Long intentosFallidos = snapshot.getLong("intentosFallidos");
         usuario.setIntentosFallidos(intentosFallidos != null ? intentosFallidos.intValue() : 0);
-        
+
         Boolean habilitado2FA = snapshot.getBoolean("habilitado2FA");
         usuario.setHabilitado2FA(habilitado2FA != null ? habilitado2FA : false);
-        
+
         usuario.setSecret2FA(snapshot.getString("secret2FA"));
-        
+
         // Convertir fechas de Timestamp a Instant
         com.google.cloud.Timestamp fechaCreacion = snapshot.getTimestamp("fechaCreacion");
         if (fechaCreacion != null) {
             usuario.setFechaCreacion(Instant.ofEpochSecond(fechaCreacion.getSeconds(), fechaCreacion.getNanos()));
         }
-        
+
         com.google.cloud.Timestamp fechaActualizacion = snapshot.getTimestamp("fechaActualizacion");
         if (fechaActualizacion != null) {
             usuario.setFechaActualizacion(Instant.ofEpochSecond(fechaActualizacion.getSeconds(), fechaActualizacion.getNanos()));
         }
-        
+
         com.google.cloud.Timestamp bloqueadoHasta = snapshot.getTimestamp("bloqueadoHasta");
         if (bloqueadoHasta != null) {
             usuario.setBloqueadoHasta(Instant.ofEpochSecond(bloqueadoHasta.getSeconds(), bloqueadoHasta.getNanos()));
         }
-        
+
         return usuario;
     }
 }

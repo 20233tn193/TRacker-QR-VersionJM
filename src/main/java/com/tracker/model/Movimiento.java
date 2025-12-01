@@ -1,6 +1,6 @@
 package com.tracker.model;
 
-import java.time.Instant;
+import com.google.cloud.Timestamp;
 
 public class Movimiento {
     
@@ -10,12 +10,12 @@ public class Movimiento {
     private String ubicacion;
     private String empleadoId;
     private String empleadoNombre;
-    private Instant fechaHora;
+    private Timestamp fechaHora;
     private String observaciones;
     
     // Constructores
     public Movimiento() {
-        this.fechaHora = Instant.now();
+        this.fechaHora = Timestamp.now();
     }
     
     // Getters y Setters
@@ -67,11 +67,11 @@ public class Movimiento {
         this.empleadoNombre = empleadoNombre;
     }
     
-    public Instant getFechaHora() {
+    public Timestamp getFechaHora() {
         return fechaHora;
     }
     
-    public void setFechaHora(Instant fechaHora) {
+    public void setFechaHora(Timestamp fechaHora) {
         this.fechaHora = fechaHora;
     }
     

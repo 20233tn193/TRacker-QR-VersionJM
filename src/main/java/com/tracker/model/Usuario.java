@@ -1,6 +1,6 @@
 package com.tracker.model;
 
-import java.time.Instant;
+import com.google.cloud.Timestamp;
 
 public class Usuario {
     
@@ -14,16 +14,16 @@ public class Usuario {
     private Role rol;
     private boolean activo;
     private int intentosFallidos;
-    private Instant bloqueadoHasta;
+    private Timestamp bloqueadoHasta;
     private String secret2FA;
     private boolean habilitado2FA;
-    private Instant fechaCreacion;
-    private Instant fechaActualizacion;
+    private Timestamp fechaCreacion;
+    private Timestamp fechaActualizacion;
     
     // Constructores
     public Usuario() {
-        this.fechaCreacion = Instant.now();
-        this.fechaActualizacion = Instant.now();
+        this.fechaCreacion = Timestamp.now();
+        this.fechaActualizacion = Timestamp.now();
         this.activo = true;
         this.intentosFallidos = 0;
         this.habilitado2FA = false;
@@ -118,11 +118,11 @@ public class Usuario {
         this.intentosFallidos = intentosFallidos;
     }
     
-    public Instant getBloqueadoHasta() {
+    public Timestamp getBloqueadoHasta() {
         return bloqueadoHasta;
     }
     
-    public void setBloqueadoHasta(Instant bloqueadoHasta) {
+    public void setBloqueadoHasta(Timestamp bloqueadoHasta) {
         this.bloqueadoHasta = bloqueadoHasta;
     }
     
@@ -142,19 +142,19 @@ public class Usuario {
         this.habilitado2FA = habilitado2FA;
     }
     
-    public Instant getFechaCreacion() {
+    public Timestamp getFechaCreacion() {
         return fechaCreacion;
     }
     
-    public void setFechaCreacion(Instant fechaCreacion) {
+    public void setFechaCreacion(Timestamp fechaCreacion) {
         this.fechaCreacion = fechaCreacion;
     }
     
-    public Instant getFechaActualizacion() {
+    public Timestamp getFechaActualizacion() {
         return fechaActualizacion;
     }
     
-    public void setFechaActualizacion(Instant fechaActualizacion) {
+    public void setFechaActualizacion(Timestamp fechaActualizacion) {
         this.fechaActualizacion = fechaActualizacion;
     }
 }

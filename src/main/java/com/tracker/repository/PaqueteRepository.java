@@ -1,5 +1,6 @@
 package com.tracker.repository;
 
+import com.google.cloud.Timestamp;
 import com.google.cloud.firestore.CollectionReference;
 import com.google.cloud.firestore.DocumentSnapshot;
 import com.google.cloud.firestore.Firestore;
@@ -9,7 +10,6 @@ import com.tracker.model.EstadoPaquete;
 import com.tracker.model.Paquete;
 import org.springframework.stereotype.Repository;
 
-import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.util.List;
@@ -32,7 +32,7 @@ public class PaqueteRepository {
     }
 
     public Paquete save(Paquete paquete) {
-        Instant now = Instant.now();
+        Timestamp now = Timestamp.now();
         if (paquete.getId() == null || paquete.getId().isBlank()) {
             paquete.setId(collection().document().getId());
             paquete.setFechaCreacion(now);
@@ -107,15 +107,15 @@ public class PaqueteRepository {
     }
 
     private List<Paquete> findByDateRange(String field, LocalDateTime inicio, LocalDateTime fin) {
-        Instant inicioInstant = toInstant(inicio);
-        Instant finInstant = toInstant(fin);
+        Timestamp inicioTimestamp = toTimestamp(inicio);
+        Timestamp finTimestamp = toTimestamp(fin);
         try {
             Query query = collection();
-            if (inicioInstant != null) {
-                query = query.whereGreaterThanOrEqualTo(field, inicioInstant);
+            if (inicioTimestamp != null) {
+                query = query.whereGreaterThanOrEqualTo(field, inicioTimestamp);
             }
-            if (finInstant != null) {
-                query = query.whereLessThanOrEqualTo(field, finInstant);
+            if (finTimestamp != null) {
+                query = query.whereLessThanOrEqualTo(field, finTimestamp);
             }
             return query.get()
                     .get()
@@ -129,8 +129,11 @@ public class PaqueteRepository {
         }
     }
 
-    private Instant toInstant(LocalDateTime dateTime) {
-        return dateTime == null ? null : dateTime.atZone(ZoneOffset.UTC).toInstant();
+    private Timestamp toTimestamp(LocalDateTime dateTime) {
+        if (dateTime == null) {
+            return null;
+        }
+        return Timestamp.of(java.sql.Timestamp.valueOf(dateTime));
     }
 
     private Paquete fromDocument(DocumentSnapshot snapshot) {
