@@ -11,6 +11,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 
 @Service
 public class UsuarioService {
@@ -20,6 +21,9 @@ public class UsuarioService {
     
     @Autowired
     private PasswordEncoder passwordEncoder;
+    
+    @Autowired
+    private EmailService emailService;
     
     public Usuario crearUsuario(UsuarioRequest request) {
         if (usuarioRepository.existsByEmail(request.getEmail())) {
@@ -105,6 +109,67 @@ public class UsuarioService {
     
     public Optional<Usuario> obtenerUsuarioPorEmail(String email) {
         return usuarioRepository.findByEmail(email);
+    }
+    
+    public void solicitarRecuperacionPassword(String email) {
+        Optional<Usuario> usuarioOpt = usuarioRepository.findByEmail(email);
+        
+        if (usuarioOpt.isEmpty()) {
+            return;
+        }
+        
+        Usuario usuario = usuarioOpt.get();
+        
+        String token = UUID.randomUUID().toString();
+        
+        Timestamp ahora = Timestamp.now();
+        long segundosEnUnaHora = 3600;
+        Timestamp expiracion = Timestamp.ofTimeSecondsAndNanos(
+            ahora.getSeconds() + segundosEnUnaHora,
+            ahora.getNanos()
+        );
+        
+        usuario.setPasswordResetToken(token);
+        usuario.setPasswordResetTokenExpiry(expiracion);
+        usuario.setFechaActualizacion(Timestamp.now());
+        
+        usuarioRepository.save(usuario);
+        
+        emailService.enviarEmailRecuperacionPassword(email, token);
+    }
+    
+    public void resetearPassword(String token, String password, String confirmPassword) {
+        if (token == null || token.isEmpty()) {
+            throw new RuntimeException("El token es obligatorio");
+        }
+        
+        if (!password.equals(confirmPassword)) {
+            throw new RuntimeException("Las contraseñas no coinciden");
+        }
+        
+        Optional<Usuario> usuarioOpt = usuarioRepository.findByPasswordResetToken(token);
+        if (usuarioOpt.isEmpty()) {
+            throw new RuntimeException("Token de recuperación inválido o expirado");
+        }
+        
+        Usuario usuario = usuarioOpt.get();
+        
+        Timestamp ahora = Timestamp.now();
+        if (usuario.getPasswordResetTokenExpiry() == null || 
+            usuario.getPasswordResetTokenExpiry().compareTo(ahora) < 0) {
+            throw new RuntimeException("Token de recuperación expirado");
+        }
+        
+        if (!token.equals(usuario.getPasswordResetToken())) {
+            throw new RuntimeException("Token de recuperación inválido");
+        }
+        
+        usuario.setPassword(passwordEncoder.encode(password));
+        usuario.setPasswordResetToken(null);
+        usuario.setPasswordResetTokenExpiry(null);
+        usuario.setFechaActualizacion(Timestamp.now());
+        
+        usuarioRepository.save(usuario);
     }
 }
 

@@ -38,6 +38,7 @@ public class SecurityConfig {
                 .requestMatchers("/auth/**").permitAll()
                 .requestMatchers("/paquetes/qr/**").permitAll()
                 .requestMatchers("/swagger-ui.html", "/swagger-ui/**", "/v3/api-docs/**", "/api-docs/**").permitAll()
+                .requestMatchers("/usuarios/recoverPassword", "/usuarios/resetPassword").permitAll()
                 .requestMatchers("/usuarios").hasAnyRole("ADMINISTRADOR", "SUPERVISOR")
                 .requestMatchers("/usuarios/**").hasAnyRole("ADMINISTRADOR", "SUPERVISOR")
                 .requestMatchers("/movimientos/**").hasAnyRole("EMPLEADO", "SUPERVISOR", "ADMINISTRADOR")

@@ -11,7 +11,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
-import java.time.temporal.ChronoUnit;
 import java.util.Optional;
 
 @Service
@@ -38,9 +37,16 @@ public class AuthService {
         
         Usuario usuario = usuarioOpt.get();
         
-        // Verificar si la cuenta está bloqueada
-        if (usuario.getBloqueadoHasta() != null && usuario.getBloqueadoHasta().compareTo(Timestamp.now()) > 0) {
-            throw new RuntimeException("Cuenta bloqueada temporalmente. Intente más tarde.");
+        // Verificar si la cuenta está bloqueada y limpiar si el bloqueo expiró
+        if (usuario.getBloqueadoHasta() != null) {
+            if (usuario.getBloqueadoHasta().compareTo(Timestamp.now()) > 0) {
+                throw new RuntimeException("Cuenta bloqueada temporalmente. Intente más tarde.");
+            } else {
+                // El bloqueo expiró, limpiar el campo y resetear intentos
+                usuario.setBloqueadoHasta(null);
+                usuario.setIntentosFallidos(0);
+                usuarioRepository.save(usuario);
+            }
         }
         
         // Verificar si el usuario está activo
