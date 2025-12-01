@@ -43,7 +43,7 @@ public class UsuarioService {
         usuario.setUbicacion(null); // Empleados/Admins no tienen ubicación
         usuario.setRol(request.getRol());
         usuario.setActivo(true);
-            usuario.setHabilitado2FA(true); // Habilitar 2FA por defecto
+        usuario.setHabilitado2FA(true);
         usuario.setFechaCreacion(Instant.now());
         usuario.setFechaActualizacion(Instant.now());
         
