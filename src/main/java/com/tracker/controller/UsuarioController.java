@@ -2,6 +2,7 @@ package com.tracker.controller;
 
 import com.tracker.dto.ApiResponse;
 import com.tracker.dto.CrearEmpleadoRequest;
+import com.tracker.dto.ActualizarEmpleadoRequest;
 import com.tracker.model.Role;
 import com.tracker.model.Usuario;
 import com.tracker.service.UsuarioService;
@@ -27,6 +28,7 @@ public class UsuarioController {
     @PostMapping
     public ResponseEntity<ApiResponse> crearEmpleado(@Valid @RequestBody CrearEmpleadoRequest request) {
         try {
+            request.setRol(Role.EMPLEADO);
             Usuario usuario = usuarioService.crearEmpleado(request);
             return ResponseEntity.ok(ApiResponse.success("Usuario creado exitosamente", usuario));
         } catch (RuntimeException e) {
@@ -41,6 +43,19 @@ public class UsuarioController {
             @Valid @RequestBody CrearEmpleadoRequest request) {
         try {
             Usuario usuario = usuarioService.actualizarUsuario(id, request);
+            return ResponseEntity.ok(ApiResponse.success("Usuario actualizado exitosamente", usuario));
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().body(ApiResponse.error(e.getMessage()));
+        }
+    }
+
+    @Operation(summary = "Actualizar datos del empleado", description = "Permite al ADMINISTRADOR actualizar nombre, apellidos y email de un empleado sin cambiar el rol")
+    @PutMapping("/{id}/datos")
+    public ResponseEntity<ApiResponse> actualizarDatosEmpleado(
+            @PathVariable String id,
+            @Valid @RequestBody ActualizarEmpleadoRequest request) {
+        try {
+            Usuario usuario = usuarioService.actualizarDatosEmpleado(id, request);
             return ResponseEntity.ok(ApiResponse.success("Usuario actualizado exitosamente", usuario));
         } catch (RuntimeException e) {
             return ResponseEntity.badRequest().body(ApiResponse.error(e.getMessage()));

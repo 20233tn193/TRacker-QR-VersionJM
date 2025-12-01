@@ -1,6 +1,7 @@
 package com.tracker.service;
 
 import com.tracker.dto.CrearEmpleadoRequest;
+import com.tracker.dto.ActualizarEmpleadoRequest;
 import com.tracker.model.Role;
 import com.tracker.model.Usuario;
 import com.tracker.repository.UsuarioRepository;
@@ -73,6 +74,32 @@ public class UsuarioService {
         usuario.setApellidoMaterno(request.getApellidoMaterno());
         // No actualizar ubicación para empleados/admins
         usuario.setRol(request.getRol());
+        usuario.setFechaActualizacion(Instant.now());
+        
+        return usuarioRepository.save(usuario);
+    }
+
+    /**
+     * Actualizar solo datos del empleado (nombre, apellidos, email) sin cambiar rol ni contraseña
+     */
+    public Usuario actualizarDatosEmpleado(String id, ActualizarEmpleadoRequest request) {
+        Optional<Usuario> usuarioOpt = usuarioRepository.findById(id);
+        if (usuarioOpt.isEmpty()) {
+            throw new RuntimeException("Usuario no encontrado");
+        }
+        
+        Usuario usuario = usuarioOpt.get();
+        
+        // Verificar si el email cambió y no está en uso
+        if (!usuario.getEmail().equals(request.getEmail()) && 
+            usuarioRepository.existsByEmail(request.getEmail())) {
+            throw new RuntimeException("El email ya está en uso");
+        }
+        
+        usuario.setEmail(request.getEmail());
+        usuario.setNombre(request.getNombre());
+        usuario.setApellidoPaterno(request.getApellidoPaterno());
+        usuario.setApellidoMaterno(request.getApellidoMaterno());
         usuario.setFechaActualizacion(Instant.now());
         
         return usuarioRepository.save(usuario);
