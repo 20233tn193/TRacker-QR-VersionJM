@@ -93,8 +93,8 @@ public class ReporteService {
                 table.addCell(createCell(movimiento.getEstado().name(), cellFont));
                 table.addCell(createCell(movimiento.getUbicacion(), cellFont));
                 table.addCell(createCell(movimiento.getEmpleadoNombre(), cellFont));
-                LocalDateTime fechaMovimiento = LocalDateTime.ofInstant(
-                        movimiento.getFechaHora(), ZoneOffset.UTC);
+                LocalDateTime fechaMovimiento = movimiento.getFechaHora().toDate()
+                        .toInstant().atZone(ZoneOffset.UTC).toLocalDateTime();
                 table.addCell(createCell(fechaMovimiento.format(formatter), cellFont));
                 table.addCell(createCell(movimiento.getObservaciones() != null ? 
                         movimiento.getObservaciones() : "", cellFont));
@@ -148,7 +148,8 @@ public class ReporteService {
         return paquetes.stream()
                 .filter(p -> p.getEstado() == com.tracker.model.EstadoPaquete.ENTREGADO)
                 .collect(Collectors.groupingBy(
-                        p -> LocalDateTime.ofInstant(p.getFechaCreacion(), ZoneOffset.UTC).getMonth().name(),
+                        p -> p.getFechaCreacion().toDate().toInstant()
+                                .atZone(ZoneOffset.UTC).toLocalDateTime().getMonth().name(),
                         Collectors.counting()
                 ));
     }
