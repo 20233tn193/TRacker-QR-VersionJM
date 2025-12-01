@@ -3,6 +3,8 @@ package com.tracker.controller;
 import com.tracker.dto.ApiResponse;
 import com.tracker.dto.LoginRequest;
 import com.tracker.dto.LoginResponse;
+import com.tracker.dto.RegistroClienteRequest;
+import com.tracker.model.Usuario;
 import com.tracker.service.AuthService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -14,7 +16,7 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @RequestMapping("/auth")
 @CrossOrigin(origins = "*")
-@Tag(name = "Autenticación", description = "Endpoints para autenticación, login y gestión de 2FA")
+@Tag(name = "Autenticación", description = "Endpoints para autenticación, registro de clientes y gestión de 2FA")
 public class AuthController {
     
     @Autowired
@@ -26,6 +28,17 @@ public class AuthController {
         try {
             LoginResponse response = authService.login(request);
             return ResponseEntity.ok(ApiResponse.success("Login exitoso", response));
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().body(ApiResponse.error(e.getMessage()));
+        }
+    }
+    
+    @Operation(summary = "Registro de cliente", description = "Permite que un cliente se auto-registre en el sistema. El rol CLIENTE se asigna automáticamente.")
+    @PostMapping("/registro")
+    public ResponseEntity<ApiResponse> registrarCliente(@Valid @RequestBody RegistroClienteRequest request) {
+        try {
+            Usuario usuario = authService.registrarCliente(request);
+            return ResponseEntity.ok(ApiResponse.success("Registro exitoso. Ahora puede iniciar sesión.", usuario));
         } catch (RuntimeException e) {
             return ResponseEntity.badRequest().body(ApiResponse.error(e.getMessage()));
         }
