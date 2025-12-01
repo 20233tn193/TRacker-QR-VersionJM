@@ -1,7 +1,9 @@
 package com.tracker.dto;
 
+import com.google.cloud.Timestamp;
 import com.tracker.model.EstadoPaquete;
-import java.time.Instant;
+
+import java.sql.Time;
 
 public class MovimientoResponse {
     
@@ -11,7 +13,7 @@ public class MovimientoResponse {
     private String ubicacion;
     private String empleadoId;
     private String empleadoNombre;
-    private Instant fechaHora;
+    private Timestamp fechaHora;
     private String observaciones;
     
     // Constructores
@@ -66,11 +68,11 @@ public class MovimientoResponse {
         this.empleadoNombre = empleadoNombre;
     }
     
-    public Instant getFechaHora() {
+    public Timestamp getFechaHora() {
         return fechaHora;
     }
     
-    public void setFechaHora(Instant fechaHora) {
+    public void setFechaHora(Timestamp fechaHora) {
         this.fechaHora = fechaHora;
     }
     

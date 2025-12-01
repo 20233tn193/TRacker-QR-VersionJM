@@ -1,5 +1,6 @@
 package com.tracker.service;
 
+import com.google.cloud.Timestamp;
 import com.tracker.dto.LoginRequest;
 import com.tracker.dto.LoginResponse;
 import com.tracker.dto.RegistroClienteRequest;
@@ -12,7 +13,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
-import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.Optional;
 
@@ -41,7 +41,7 @@ public class AuthService {
         Usuario usuario = usuarioOpt.get();
         
         // Verificar si la cuenta está bloqueada
-        if (usuario.getBloqueadoHasta() != null && usuario.getBloqueadoHasta().isAfter(Instant.now())) {
+        if (usuario.getBloqueadoHasta() != null && usuario.getBloqueadoHasta().compareTo(Timestamp.now()) > 0) {
             throw new RuntimeException("Cuenta bloqueada temporalmente. Intente más tarde.");
         }
         
@@ -98,7 +98,10 @@ public class AuthService {
         usuario.setIntentosFallidos(usuario.getIntentosFallidos() + 1);
         
         if (usuario.getIntentosFallidos() >= 3) {
-            usuario.setBloqueadoHasta(Instant.now().plus(1, ChronoUnit.DAYS));
+            java.util.Date fechaBloqueo = new java.util.Date(
+                Timestamp.now().toDate().getTime() + (24 * 60 * 60 * 1000L)
+            );
+            usuario.setBloqueadoHasta(Timestamp.of(fechaBloqueo));
         }
         
         usuarioRepository.save(usuario);
@@ -174,8 +177,8 @@ public class AuthService {
         usuario.setRol(Role.CLIENTE); // Siempre CLIENTE
         usuario.setActivo(true);
         usuario.setHabilitado2FA(true); // Habilitar 2FA por defecto
-        usuario.setFechaCreacion(Instant.now());
-        usuario.setFechaActualizacion(Instant.now());
+        usuario.setFechaCreacion(Timestamp.now());
+        usuario.setFechaActualizacion(Timestamp.now());
         
         return usuarioRepository.save(usuario);
     }

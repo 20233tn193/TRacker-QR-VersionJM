@@ -1,6 +1,6 @@
 package com.tracker.model;
 
-import java.time.Instant;
+import com.google.cloud.Timestamp;
 
 public class Paquete {
     
@@ -11,20 +11,20 @@ public class Paquete {
     private String clienteEmail;
     private String direccionOrigen;
     private String direccionDestino;
-    private Instant fechaCreacion;
-    private Instant fechaUltimaActualizacion;
+    private Timestamp fechaCreacion;
+    private Timestamp fechaUltimaActualizacion;
     private boolean confirmadoRecepcion;
-    private Instant fechaConfirmacionRecepcion;
+    private Timestamp fechaConfirmacionRecepcion;
     private String firmaDigital;
     
     // Constructores
     public Paquete() {
-        this.fechaCreacion = Instant.now();
-        this.fechaUltimaActualizacion = Instant.now();
+        this.fechaCreacion = Timestamp.now();
+        this.fechaUltimaActualizacion = Timestamp.now();
         this.estado = EstadoPaquete.RECOLECTADO;
         this.confirmadoRecepcion = false;
     }
-    
+
     // Getters y Setters
     public String getId() {
         return id;
@@ -56,7 +56,7 @@ public class Paquete {
     
     public void setEstado(EstadoPaquete estado) {
         this.estado = estado;
-        this.fechaUltimaActualizacion = Instant.now();
+        this.fechaUltimaActualizacion = Timestamp.now();
     }
     
     public String getClienteEmail() {
@@ -83,19 +83,19 @@ public class Paquete {
         this.direccionDestino = direccionDestino;
     }
     
-    public Instant getFechaCreacion() {
+    public Timestamp getFechaCreacion() {
         return fechaCreacion;
     }
     
-    public void setFechaCreacion(Instant fechaCreacion) {
+    public void setFechaCreacion(Timestamp fechaCreacion) {
         this.fechaCreacion = fechaCreacion;
     }
     
-    public Instant getFechaUltimaActualizacion() {
+    public Timestamp getFechaUltimaActualizacion() {
         return fechaUltimaActualizacion;
     }
     
-    public void setFechaUltimaActualizacion(Instant fechaUltimaActualizacion) {
+    public void setFechaUltimaActualizacion(Timestamp fechaUltimaActualizacion) {
         this.fechaUltimaActualizacion = fechaUltimaActualizacion;
     }
     
@@ -106,15 +106,15 @@ public class Paquete {
     public void setConfirmadoRecepcion(boolean confirmadoRecepcion) {
         this.confirmadoRecepcion = confirmadoRecepcion;
         if (confirmadoRecepcion) {
-            this.fechaConfirmacionRecepcion = Instant.now();
+            this.fechaConfirmacionRecepcion = Timestamp.now();
         }
     }
     
-    public Instant getFechaConfirmacionRecepcion() {
+    public Timestamp getFechaConfirmacionRecepcion() {
         return fechaConfirmacionRecepcion;
     }
     
-    public void setFechaConfirmacionRecepcion(Instant fechaConfirmacionRecepcion) {
+    public void setFechaConfirmacionRecepcion(Timestamp fechaConfirmacionRecepcion) {
         this.fechaConfirmacionRecepcion = fechaConfirmacionRecepcion;
     }
     

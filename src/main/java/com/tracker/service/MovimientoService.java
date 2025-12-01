@@ -1,5 +1,6 @@
 package com.tracker.service;
 
+import com.google.cloud.Timestamp;
 import com.tracker.dto.MovimientoRequest;
 import com.tracker.dto.MovimientoResponse;
 import com.tracker.model.EstadoPaquete;
@@ -12,7 +13,6 @@ import com.tracker.repository.UsuarioRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.time.Instant;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
@@ -59,7 +59,7 @@ public class MovimientoService {
         movimiento.setUbicacion(request.getUbicacion());
         movimiento.setEmpleadoId(empleadoId);
         movimiento.setEmpleadoNombre(empleado.getNombre() + " " + empleado.getApellidos());
-        movimiento.setFechaHora(Instant.now());
+        movimiento.setFechaHora(Timestamp.now());
         movimiento.setObservaciones(request.getObservaciones());
         
         // Guardar movimiento
