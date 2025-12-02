@@ -12,8 +12,6 @@ public class PaqueteRequest {
     @Email(message = "El email debe ser válido")
     private String clienteEmail;
     
-    @NotBlank(message = "La dirección de origen es obligatoria")
-    private String direccionOrigen;
     
     @NotBlank(message = "La dirección de destino es obligatoria")
     private String direccionDestino;
@@ -36,14 +34,6 @@ public class PaqueteRequest {
     
     public void setClienteEmail(String clienteEmail) {
         this.clienteEmail = clienteEmail;
-    }
-    
-    public String getDireccionOrigen() {
-        return direccionOrigen;
-    }
-    
-    public void setDireccionOrigen(String direccionOrigen) {
-        this.direccionOrigen = direccionOrigen;
     }
     
     public String getDireccionDestino() {

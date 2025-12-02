@@ -89,6 +89,58 @@ public class PaqueteRepository {
         return findByDateRange("fechaUltimaActualizacion", inicio, fin);
     }
 
+    public long countAll() {
+        try {
+            return collection().get().get().getDocuments().size();
+        } catch (InterruptedException | ExecutionException e) {
+            Thread.currentThread().interrupt();
+            throw new RuntimeException("Error al contar todos los paquetes", e);
+        }
+    }
+
+    public long countByEstado(EstadoPaquete estado) {
+        try {
+            return collection()
+                    .whereEqualTo("estado", estado)
+                    .get()
+                    .get()
+                    .getDocuments()
+                    .size();
+        } catch (InterruptedException | ExecutionException e) {
+            Thread.currentThread().interrupt();
+            throw new RuntimeException("Error al contar paquetes por estado", e);
+        }
+    }
+
+    public long countByClienteEmail(String clienteEmail) {
+        try {
+            return collection()
+                    .whereEqualTo("clienteEmail", clienteEmail)
+                    .get()
+                    .get()
+                    .getDocuments()
+                    .size();
+        } catch (InterruptedException | ExecutionException e) {
+            Thread.currentThread().interrupt();
+            throw new RuntimeException("Error al contar paquetes por cliente", e);
+        }
+    }
+
+    public long countByClienteEmailAndEstado(String clienteEmail, EstadoPaquete estado) {
+        try {
+            return collection()
+                    .whereEqualTo("clienteEmail", clienteEmail)
+                    .whereEqualTo("estado", estado)
+                    .get()
+                    .get()
+                    .getDocuments()
+                    .size();
+        } catch (InterruptedException | ExecutionException e) {
+            Thread.currentThread().interrupt();
+            throw new RuntimeException("Error al contar paquetes por cliente y estado", e);
+        }
+    }
+
     private List<Paquete> findByField(String field, Object value) {
         try {
             return collection()
