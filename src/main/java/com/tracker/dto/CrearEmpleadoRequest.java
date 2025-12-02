@@ -5,7 +5,11 @@ import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 
-public class UsuarioRequest {
+/**
+ * DTO para crear usuarios con rol EMPLEADO o ADMINISTRADOR
+ * Solo puede ser usado por usuarios con rol ADMINISTRADOR
+ */
+public class CrearEmpleadoRequest {
     
     @NotBlank(message = "El email es obligatorio")
     @Email(message = "El email debe ser válido")
@@ -22,13 +26,11 @@ public class UsuarioRequest {
     
     private String apellidoMaterno; // Opcional
     
-    private String ubicacion; // Municipio de Morelos
-    
     @NotNull(message = "El rol es obligatorio")
-    private Role rol;
+    private Role rol; // EMPLEADO o ADMINISTRADOR
     
     // Constructores
-    public UsuarioRequest() {}
+    public CrearEmpleadoRequest() {}
     
     // Getters y Setters
     public String getEmail() {
@@ -71,33 +73,6 @@ public class UsuarioRequest {
         this.apellidoMaterno = apellidoMaterno;
     }
     
-    public String getUbicacion() {
-        return ubicacion;
-    }
-    
-    public void setUbicacion(String ubicacion) {
-        this.ubicacion = ubicacion;
-    }
-    
-    public String getApellidos() {
-        // Para compatibilidad, retorna apellidos completos
-        if (apellidoMaterno != null && !apellidoMaterno.isEmpty()) {
-            return apellidoPaterno + " " + apellidoMaterno;
-        }
-        return apellidoPaterno;
-    }
-    
-    public void setApellidos(String apellidos) {
-        // Para compatibilidad, divide en paterno y materno si viene separado
-        if (apellidos != null && apellidos.contains(" ")) {
-            String[] partes = apellidos.split(" ", 2);
-            this.apellidoPaterno = partes[0];
-            this.apellidoMaterno = partes.length > 1 ? partes[1] : null;
-        } else {
-            this.apellidoPaterno = apellidos;
-        }
-    }
-    
     public Role getRol() {
         return rol;
     }
@@ -106,4 +81,3 @@ public class UsuarioRequest {
         this.rol = rol;
     }
 }
-

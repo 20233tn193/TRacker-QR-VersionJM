@@ -10,7 +10,6 @@ import com.tracker.model.Movimiento;
 import org.springframework.stereotype.Repository;
 
 import java.time.LocalDateTime;
-import java.time.ZoneOffset;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
 import java.util.stream.Collectors;
@@ -68,6 +67,23 @@ public class MovimientoRepository {
 
     public List<Movimiento> findByEmpleadoId(String empleadoId) {
         return findByField("empleadoId", empleadoId);
+    }
+
+    public List<Movimiento> findByEmpleadoIdAndEstado(String empleadoId, EstadoPaquete estado) {
+        try {
+            return collection()
+                    .whereEqualTo("empleadoId", empleadoId)
+                    .whereEqualTo("estado", estado)
+                    .get()
+                    .get()
+                    .getDocuments()
+                    .stream()
+                    .map(this::fromDocument)
+                    .collect(Collectors.toList());
+        } catch (InterruptedException | ExecutionException e) {
+            Thread.currentThread().interrupt();
+            throw new RuntimeException("Error al consultar movimientos por empleado y estado", e);
+        }
     }
 
     public List<Movimiento> findByEstado(EstadoPaquete estado) {

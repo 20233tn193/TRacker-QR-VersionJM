@@ -1,0 +1,28 @@
+package com.tracker.dto;
+
+import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.NotBlank;
+
+public class RecoverPasswordRequest {
+    
+    @NotBlank(message = "El email es obligatorio")
+    @Email(message = "El email debe ser válido")
+    private String email;
+    
+    // Constructores
+    public RecoverPasswordRequest() {}
+    
+    public RecoverPasswordRequest(String email) {
+        this.email = email;
+    }
+    
+    // Getters y Setters
+    public String getEmail() {
+        return email;
+    }
+    
+    public void setEmail(String email) {
+        this.email = email;
+    }
+}
+

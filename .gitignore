@@ -50,3 +50,16 @@ reports/
 *.pdf
 src/main/resources/firebase-service-account.json
 
+# Environment variables
+.env
+.env.local
+.env.production
+.env.*.local
+*.env
+
+# Application profiles (pueden contener secretos)
+application-prod.yml
+application-local.yml
+application-*.yml
+!application.yml
+

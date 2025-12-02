@@ -11,6 +11,8 @@ public class Paquete {
     private String clienteEmail;
     private String direccionOrigen;
     private String direccionDestino;
+    private String ubicacion;
+    private String empleadoId;
     private Timestamp fechaCreacion;
     private Timestamp fechaUltimaActualizacion;
     private boolean confirmadoRecepcion;
@@ -81,6 +83,22 @@ public class Paquete {
     
     public void setDireccionDestino(String direccionDestino) {
         this.direccionDestino = direccionDestino;
+    }
+    
+    public String getUbicacion() {
+        return ubicacion;
+    }
+    
+    public void setUbicacion(String ubicacion) {
+        this.ubicacion = ubicacion;
+    }
+    
+    public String getEmpleadoId() {
+        return empleadoId;
+    }
+    
+    public void setEmpleadoId(String empleadoId) {
+        this.empleadoId = empleadoId;
     }
     
     public Timestamp getFechaCreacion() {

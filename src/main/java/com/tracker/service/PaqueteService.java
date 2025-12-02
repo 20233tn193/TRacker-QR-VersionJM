@@ -4,16 +4,29 @@ import com.tracker.dto.ConfirmacionRecepcionRequest;
 import com.tracker.dto.PaqueteRequest;
 import com.tracker.dto.PaqueteResponse;
 import com.tracker.dto.MovimientoResponse;
+import com.tracker.dto.SatisfaccionResponse;
 import com.tracker.model.EstadoPaquete;
+import com.tracker.model.Movimiento;
 import com.tracker.model.Paquete;
+import com.tracker.model.Role;
+import com.tracker.model.Usuario;
+import com.google.cloud.Timestamp;
 import com.tracker.repository.PaqueteRepository;
 import com.tracker.repository.MovimientoRepository;
+import com.tracker.repository.UsuarioRepository;
 import com.tracker.util.QRCodeGenerator;
+import com.tracker.util.JwtUtil;
+import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
+import java.time.YearMonth;
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -27,21 +40,70 @@ public class PaqueteService {
     private MovimientoRepository movimientoRepository;
     
     @Autowired
+    private UsuarioRepository usuarioRepository;
+    
+    @Autowired
     private QRCodeGenerator qrCodeGenerator;
     
-    public Paquete crearPaquete(PaqueteRequest request) {
+    @Autowired
+    private JwtUtil jwtUtil;
+    
+    public Paquete crearPaquete(PaqueteRequest request, HttpServletRequest httpRequest) {
+        Optional<Usuario> usuarioOpt = usuarioRepository.findByEmail(request.getClienteEmail());
+        if (usuarioOpt.isEmpty()) {
+            throw new RuntimeException("Cliente no encontrado con el email proporcionado");
+        }
+        
+        Usuario cliente = usuarioOpt.get();
+        if (cliente.getUbicacion() == null || cliente.getUbicacion().isEmpty()) {
+            throw new RuntimeException("El cliente no tiene una ubicación registrada");
+        }
+        
+        String token = extractToken(httpRequest);
+        String empleadoId = jwtUtil.extractUserId(token);
+        String role = jwtUtil.extractRole(token);
+        
+        if (!role.equals(Role.EMPLEADO.name())) {
+            throw new RuntimeException("Solo los empleados pueden crear paquetes");
+        }
+        
+        Optional<Usuario> empleadoOpt = usuarioRepository.findById(empleadoId);
+        if (empleadoOpt.isEmpty()) {
+            throw new RuntimeException("Empleado no encontrado");
+        }
+        
+        Usuario empleado = empleadoOpt.get();
+        if (empleado.getRol() != Role.EMPLEADO) {
+            throw new RuntimeException("El usuario autenticado no es un empleado");
+        }
+        
         Paquete paquete = new Paquete();
         paquete.setDescripcion(request.getDescripcion());
         paquete.setClienteEmail(request.getClienteEmail());
-        paquete.setDireccionOrigen(request.getDireccionOrigen());
+        paquete.setDireccionOrigen(cliente.getUbicacion()); 
         paquete.setDireccionDestino(request.getDireccionDestino());
         paquete.setEstado(EstadoPaquete.RECOLECTADO);
+        paquete.setEmpleadoId(empleadoId);
+        paquete.setUbicacion(request.getUbicacion());
         
         // Generar código QR único
         String codigoQR = generarCodigoQRUnico();
         paquete.setCodigoQR(codigoQR);
         
-        return paqueteRepository.save(paquete);
+        Paquete paqueteGuardado = paqueteRepository.save(paquete);
+        
+        Movimiento movimiento = new Movimiento();
+        movimiento.setPaqueteId(paqueteGuardado.getId());
+        movimiento.setEstado(EstadoPaquete.RECOLECTADO);
+        movimiento.setUbicacion(request.getUbicacion());
+        movimiento.setEmpleadoId(empleadoId);
+        movimiento.setEmpleadoNombre(empleado.getNombre() + " " + empleado.getApellidos());
+        movimiento.setFechaHora(Timestamp.now());
+        movimiento.setObservaciones("Paquete recolectado por el repartidor " + empleado.getNombre() + " " + empleado.getApellidos());
+        
+        movimientoRepository.save(movimiento);
+        
+        return paqueteGuardado;
     }
     
     private String generarCodigoQRUnico() {
@@ -51,6 +113,14 @@ public class PaqueteService {
         } while (paqueteRepository.findByCodigoQR(codigo).isPresent());
         
         return codigo;
+    }
+    
+    private String extractToken(HttpServletRequest request) {
+        String bearerToken = request.getHeader("Authorization");
+        if (bearerToken != null && bearerToken.startsWith("Bearer ")) {
+            return bearerToken.substring(7);
+        }
+        throw new RuntimeException("Token no encontrado. Se requiere autenticación");
     }
     
     public PaqueteResponse consultarPaquetePorQR(String codigoQR) {
@@ -129,6 +199,115 @@ public class PaqueteService {
         }
     }
     
+    public long obtenerPaquetesPorEstado(EstadoPaquete estado) {
+        return paqueteRepository.countByEstado(estado);
+    }
+    
+    public SatisfaccionResponse calcularIndiceSatisfaccion() {
+        long totalPaquetes = paqueteRepository.countAll();
+        long paquetesEntregados = paqueteRepository.countByEstado(EstadoPaquete.ENTREGADO);
+        
+        double indiceCumplimiento = 0.0;
+        if (totalPaquetes > 0) {
+            indiceCumplimiento = (double) paquetesEntregados / totalPaquetes * 100.0;
+        }
+        
+        return new SatisfaccionResponse(totalPaquetes, paquetesEntregados, indiceCumplimiento);
+    }
+    
+    public SatisfaccionResponse calcularIndiceSatisfaccionPorRepartidor(String repartidorId) {
+        Optional<Usuario> usuarioOpt = usuarioRepository.findById(repartidorId);
+        if (usuarioOpt.isEmpty()) {
+            throw new RuntimeException("Repartidor no encontrado");
+        }
+        
+        Usuario repartidor = usuarioOpt.get();
+        
+        if (repartidor.getRol() != Role.EMPLEADO) {
+            throw new RuntimeException("El usuario especificado no es un repartidor (EMPLEADO)");
+        }
+        
+        List<com.tracker.model.Movimiento> todosLosMovimientos = movimientoRepository.findByEmpleadoId(repartidorId);
+        
+        List<com.tracker.model.Movimiento> movimientosEntregados = 
+                movimientoRepository.findByEmpleadoIdAndEstado(repartidorId, EstadoPaquete.ENTREGADO);
+        
+        Set<String> paquetesUnicos = todosLosMovimientos.stream()
+                .map(com.tracker.model.Movimiento::getPaqueteId)
+                .collect(Collectors.toSet());
+        long totalPaquetes = paquetesUnicos.size();
+        
+        Set<String> paquetesEntregadosUnicos = movimientosEntregados.stream()
+                .map(com.tracker.model.Movimiento::getPaqueteId)
+                .collect(Collectors.toSet());
+        long paquetesEntregados = paquetesEntregadosUnicos.size();
+        
+        double indiceCumplimiento = 0.0;
+        if (totalPaquetes > 0) {
+            indiceCumplimiento = (double) paquetesEntregados / totalPaquetes * 100.0;
+        }
+        
+        return new SatisfaccionResponse(totalPaquetes, paquetesEntregados, indiceCumplimiento);
+    }
+    
+    public SatisfaccionResponse calcularIndiceSatisfaccionPorCliente(String clienteId) {
+        Optional<Usuario> usuarioOpt = usuarioRepository.findById(clienteId);
+        if (usuarioOpt.isEmpty()) {
+            throw new RuntimeException("Cliente no encontrado");
+        }
+        
+        Usuario cliente = usuarioOpt.get();
+        
+        if (cliente.getRol() != Role.CLIENTE) {
+            throw new RuntimeException("El usuario especificado no es un cliente");
+        }
+        
+        String clienteEmail = cliente.getEmail();
+        long totalPaquetes = paqueteRepository.countByClienteEmail(clienteEmail);
+        long paquetesEntregados = paqueteRepository.countByClienteEmailAndEstado(clienteEmail, EstadoPaquete.ENTREGADO);
+        
+        double indiceCumplimiento = 0.0;
+        if (totalPaquetes > 0) {
+            indiceCumplimiento = (double) paquetesEntregados / totalPaquetes * 100.0;
+        }
+        
+        return new SatisfaccionResponse(totalPaquetes, paquetesEntregados, indiceCumplimiento);
+    }
+    
+    public List<PaqueteResponse> obtenerPaquetesPorEmpleado(String empleadoId, EstadoPaquete estado, String mes) {
+        // Si se proporciona empleadoId, validar que existe y es empleado
+        if (empleadoId != null && !empleadoId.isBlank()) {
+            Optional<Usuario> usuarioOpt = usuarioRepository.findById(empleadoId);
+            if (usuarioOpt.isEmpty()) {
+                throw new RuntimeException("Empleado no encontrado");
+            }
+            
+            Usuario empleado = usuarioOpt.get();
+            if (empleado.getRol() != Role.EMPLEADO) {
+                throw new RuntimeException("El usuario especificado no es un empleado");
+            }
+        }
+        
+        // Convertir mes a rango de fechas
+        LocalDateTime inicioMes = null;
+        LocalDateTime finMes = null;
+        if (mes != null && !mes.isBlank()) {
+            try {
+                // Formato esperado: YYYY-MM (ej: "2024-01")
+                YearMonth yearMonth = YearMonth.parse(mes, DateTimeFormatter.ofPattern("yyyy-MM"));
+                inicioMes = yearMonth.atDay(1).atStartOfDay();
+                finMes = yearMonth.atEndOfMonth().atTime(23, 59, 59);
+            } catch (DateTimeParseException e) {
+                throw new RuntimeException("Formato de mes inválido. Use el formato YYYY-MM (ej: 2024-01)");
+            }
+        }
+        
+        return paqueteRepository.findByEmpleadoIdAndEstado(empleadoId, estado, inicioMes, finMes)
+                .stream()
+                .map(this::convertirAPaqueteResponse)
+                .collect(Collectors.toList());
+    }
+    
     private PaqueteResponse convertirAPaqueteResponse(Paquete paquete) {
         PaqueteResponse response = new PaqueteResponse();
         response.setId(paquete.getId());
@@ -138,6 +317,8 @@ public class PaqueteService {
         response.setClienteEmail(paquete.getClienteEmail());
         response.setDireccionOrigen(paquete.getDireccionOrigen());
         response.setDireccionDestino(paquete.getDireccionDestino());
+        response.setUbicacion(paquete.getUbicacion());
+        response.setEmpleadoId(paquete.getEmpleadoId());
         response.setFechaCreacion(paquete.getFechaCreacion());
         response.setFechaUltimaActualizacion(paquete.getFechaUltimaActualizacion());
         response.setConfirmadoRecepcion(paquete.isConfirmadoRecepcion());

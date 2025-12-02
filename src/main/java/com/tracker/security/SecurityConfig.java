@@ -35,13 +35,15 @@ public class SecurityConfig {
             .cors(cors -> cors.configurationSource(corsConfigurationSource()))
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .authorizeHttpRequests(auth -> auth
-                .requestMatchers("/auth/**").permitAll()
+                .requestMatchers("/auth/**").permitAll() // Incluye /auth/registro
                 .requestMatchers("/paquetes/qr/**").permitAll()
+                .requestMatchers("/migracion/**").permitAll()
                 .requestMatchers("/swagger-ui.html", "/swagger-ui/**", "/v3/api-docs/**", "/api-docs/**").permitAll()
-                .requestMatchers("/usuarios").hasAnyRole("ADMINISTRADOR", "SUPERVISOR")
-                .requestMatchers("/usuarios/**").hasAnyRole("ADMINISTRADOR", "SUPERVISOR")
-                .requestMatchers("/movimientos/**").hasAnyRole("EMPLEADO", "SUPERVISOR", "ADMINISTRADOR")
-                .requestMatchers("/reportes/**").hasAnyRole("SUPERVISOR", "ADMINISTRADOR")
+                .requestMatchers("/usuarios/recoverPassword", "/usuarios/resetPassword").permitAll()
+                .requestMatchers("/usuarios").permitAll()
+                .requestMatchers("/usuarios/**").hasRole("ADMINISTRADOR")
+                .requestMatchers("/movimientos/**").hasAnyRole("EMPLEADO", "ADMINISTRADOR")
+                .requestMatchers("/reportes/**").hasRole("ADMINISTRADOR")
                 .anyRequest().authenticated()
             )
             .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);

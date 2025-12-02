@@ -12,11 +12,12 @@ public class PaqueteRequest {
     @Email(message = "El email debe ser válido")
     private String clienteEmail;
     
-    @NotBlank(message = "La dirección de origen es obligatoria")
-    private String direccionOrigen;
     
     @NotBlank(message = "La dirección de destino es obligatoria")
     private String direccionDestino;
+    
+    private String empleadoId;
+    private String ubicacion;
     
     // Constructores
     public PaqueteRequest() {}
@@ -38,20 +39,28 @@ public class PaqueteRequest {
         this.clienteEmail = clienteEmail;
     }
     
-    public String getDireccionOrigen() {
-        return direccionOrigen;
-    }
-    
-    public void setDireccionOrigen(String direccionOrigen) {
-        this.direccionOrigen = direccionOrigen;
-    }
-    
     public String getDireccionDestino() {
         return direccionDestino;
     }
     
     public void setDireccionDestino(String direccionDestino) {
         this.direccionDestino = direccionDestino;
+    }
+    
+    public String getEmpleadoId() {
+        return empleadoId;
+    }
+    
+    public void setEmpleadoId(String empleadoId) {
+        this.empleadoId = empleadoId;
+    }
+    
+    public String getUbicacion() {
+        return ubicacion;
+    }
+    
+    public void setUbicacion(String ubicacion) {
+        this.ubicacion = ubicacion;
     }
 }
 

@@ -8,13 +8,17 @@ public class Usuario {
     private String email;
     private String password;
     private String nombre;
-    private String apellidos;
+    private String apellidoPaterno;
+    private String apellidoMaterno;
+    private String ubicacion; // Municipio de Morelos
     private Role rol;
     private boolean activo;
     private int intentosFallidos;
     private Timestamp bloqueadoHasta;
     private String secret2FA;
     private boolean habilitado2FA;
+    private String passwordResetToken;
+    private Timestamp passwordResetTokenExpiry;
     private Timestamp fechaCreacion;
     private Timestamp fechaActualizacion;
     
@@ -60,12 +64,36 @@ public class Usuario {
         this.nombre = nombre;
     }
     
-    public String getApellidos() {
-        return apellidos;
+    public String getApellidoPaterno() {
+        return apellidoPaterno;
     }
     
-    public void setApellidos(String apellidos) {
-        this.apellidos = apellidos;
+    public void setApellidoPaterno(String apellidoPaterno) {
+        this.apellidoPaterno = apellidoPaterno;
+    }
+    
+    public String getApellidoMaterno() {
+        return apellidoMaterno;
+    }
+    
+    public void setApellidoMaterno(String apellidoMaterno) {
+        this.apellidoMaterno = apellidoMaterno;
+    }
+    
+    public String getUbicacion() {
+        return ubicacion;
+    }
+    
+    public void setUbicacion(String ubicacion) {
+        this.ubicacion = ubicacion;
+    }
+    
+    // Método de compatibilidad para obtener apellidos completos
+    public String getApellidos() {
+        if (apellidoMaterno != null && !apellidoMaterno.isEmpty()) {
+            return apellidoPaterno + " " + apellidoMaterno;
+        }
+        return apellidoPaterno;
     }
     
     public Role getRol() {
@@ -130,6 +158,22 @@ public class Usuario {
     
     public void setFechaActualizacion(Timestamp fechaActualizacion) {
         this.fechaActualizacion = fechaActualizacion;
+    }
+    
+    public String getPasswordResetToken() {
+        return passwordResetToken;
+    }
+    
+    public void setPasswordResetToken(String passwordResetToken) {
+        this.passwordResetToken = passwordResetToken;
+    }
+    
+    public Timestamp getPasswordResetTokenExpiry() {
+        return passwordResetTokenExpiry;
+    }
+    
+    public void setPasswordResetTokenExpiry(Timestamp passwordResetTokenExpiry) {
+        this.passwordResetTokenExpiry = passwordResetTokenExpiry;
     }
 }
 
