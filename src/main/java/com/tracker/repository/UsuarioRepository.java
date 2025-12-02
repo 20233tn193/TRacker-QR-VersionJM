@@ -84,7 +84,7 @@ public class UsuarioRepository {
             throw new RuntimeException("Error al verificar email de usuario", e);
         }
     }
-
+    
     public Optional<Usuario> findByPasswordResetToken(String token) {
         try {
             List<QueryDocumentSnapshot> documents = collection()
@@ -98,7 +98,7 @@ public class UsuarioRepository {
                     : Optional.ofNullable(fromDocument(documents.get(0)));
         } catch (InterruptedException | ExecutionException e) {
             Thread.currentThread().interrupt();
-            throw new RuntimeException("Error al obtener usuario por token de recuperaciÃ³n", e);
+            throw new RuntimeException("Error al obtener usuario por token de recuperación", e);
         }
     }
 

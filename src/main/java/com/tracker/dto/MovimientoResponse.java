@@ -3,7 +3,6 @@ package com.tracker.dto;
 import com.google.cloud.Timestamp;
 import com.tracker.model.EstadoPaquete;
 
-import java.sql.Time;
 
 public class MovimientoResponse {
     

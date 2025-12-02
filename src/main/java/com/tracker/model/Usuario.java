@@ -17,6 +17,8 @@ public class Usuario {
     private Timestamp bloqueadoHasta;
     private String secret2FA;
     private boolean habilitado2FA;
+    private String passwordResetToken;
+    private Timestamp passwordResetTokenExpiry;
     private Timestamp fechaCreacion;
     private Timestamp fechaActualizacion;
     
@@ -156,6 +158,22 @@ public class Usuario {
     
     public void setFechaActualizacion(Timestamp fechaActualizacion) {
         this.fechaActualizacion = fechaActualizacion;
+    }
+    
+    public String getPasswordResetToken() {
+        return passwordResetToken;
+    }
+    
+    public void setPasswordResetToken(String passwordResetToken) {
+        this.passwordResetToken = passwordResetToken;
+    }
+    
+    public Timestamp getPasswordResetTokenExpiry() {
+        return passwordResetTokenExpiry;
+    }
+    
+    public void setPasswordResetTokenExpiry(Timestamp passwordResetTokenExpiry) {
+        this.passwordResetTokenExpiry = passwordResetTokenExpiry;
     }
 }
 

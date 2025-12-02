@@ -1,6 +1,8 @@
 package com.tracker.controller;
 
 import com.tracker.dto.ApiResponse;
+import com.tracker.dto.RecoverPasswordRequest;
+import com.tracker.dto.ResetPasswordRequest;
 import com.tracker.dto.CrearEmpleadoRequest;
 import com.tracker.dto.ActualizarEmpleadoRequest;
 import com.tracker.model.Role;
@@ -112,5 +114,34 @@ public class UsuarioController {
             return ResponseEntity.badRequest().body(ApiResponse.error(e.getMessage()));
         }
     }
+    
+    @PostMapping("/recoverPassword")
+    public ResponseEntity<ApiResponse> recuperarPassword(@Valid @RequestBody RecoverPasswordRequest request) {
+        try {
+            usuarioService.solicitarRecuperacionPassword(request.getEmail());
+            return ResponseEntity.ok(ApiResponse.success(
+                "Si el email existe en nuestro sistema, recibirás un correo con las instrucciones para recuperar tu contraseña"
+            ));
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().body(ApiResponse.error(e.getMessage()));
+        }
+    }
+    
+    @PostMapping("/resetPassword")
+    public ResponseEntity<ApiResponse> resetearPassword(
+            @RequestParam(required = false) String token,
+            @Valid @RequestBody ResetPasswordRequest request) {
+        try {
+            String tokenFinal = (token != null && !token.isEmpty()) ? token : request.getToken();
+            
+            usuarioService.resetearPassword(
+                tokenFinal,
+                request.getPassword(),
+                request.getConfirmPassword()
+            );
+            return ResponseEntity.ok(ApiResponse.success("Contraseña restablecida exitosamente"));
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().body(ApiResponse.error(e.getMessage()));
+        }
+    }
 }
-
