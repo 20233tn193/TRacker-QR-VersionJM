@@ -43,12 +43,8 @@ public class MovimientoController {
     
     @GetMapping("/paquete/{paqueteId}")
     public ResponseEntity<ApiResponse> obtenerMovimientosPorPaquete(@PathVariable String paqueteId) {
-        try {
-            List<MovimientoResponse> movimientos = movimientoService.obtenerMovimientosPorPaquete(paqueteId);
-            return ResponseEntity.ok(ApiResponse.success("Movimientos encontrados", movimientos));
-        } catch (RuntimeException e) {
-            return ResponseEntity.badRequest().body(ApiResponse.error(e.getMessage()));
-        }
+        List<MovimientoResponse> movimientos = movimientoService.obtenerMovimientosPorPaquete(paqueteId);
+        return ResponseEntity.ok(ApiResponse.success("Movimientos encontrados", movimientos));
     }
     
     @GetMapping("/empleado/{empleadoId}")
