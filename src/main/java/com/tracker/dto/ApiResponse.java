@@ -1,17 +1,17 @@
 package com.tracker.dto;
 
-import java.time.Instant;
+import com.google.cloud.Timestamp;
 
 public class ApiResponse {
     
     private boolean success;
     private String message;
     private Object data;
-    private Instant timestamp;
+    private Timestamp timestamp;
     
     // Constructores
     public ApiResponse() {
-        this.timestamp = Instant.now();
+        this.timestamp = Timestamp.now();
     }
     
     public ApiResponse(boolean success, String message) {
@@ -63,11 +63,11 @@ public class ApiResponse {
         this.data = data;
     }
     
-    public Instant getTimestamp() {
+    public Timestamp getTimestamp() {
         return timestamp;
     }
     
-    public void setTimestamp(Instant timestamp) {
+    public void setTimestamp(Timestamp timestamp) {
         this.timestamp = timestamp;
     }
 }

@@ -1,5 +1,6 @@
 package com.tracker.repository;
 
+import com.google.cloud.Timestamp;
 import com.google.cloud.firestore.CollectionReference;
 import com.google.cloud.firestore.DocumentSnapshot;
 import com.google.cloud.firestore.Firestore;
@@ -8,7 +9,6 @@ import com.tracker.model.Role;
 import com.tracker.model.Usuario;
 import org.springframework.stereotype.Repository;
 
-import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.ExecutionException;
@@ -29,7 +29,7 @@ public class UsuarioRepository {
     }
 
     public Usuario save(Usuario usuario) {
-        Instant now = Instant.now();
+        Timestamp now = Timestamp.now();
         if (usuario.getId() == null || usuario.getId().isBlank()) {
             usuario.setId(collection().document().getId());
             usuario.setFechaCreacion(now);
