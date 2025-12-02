@@ -69,6 +69,23 @@ public class MovimientoRepository {
         return findByField("empleadoId", empleadoId);
     }
 
+    public List<Movimiento> findByEmpleadoIdAndEstado(String empleadoId, EstadoPaquete estado) {
+        try {
+            return collection()
+                    .whereEqualTo("empleadoId", empleadoId)
+                    .whereEqualTo("estado", estado)
+                    .get()
+                    .get()
+                    .getDocuments()
+                    .stream()
+                    .map(this::fromDocument)
+                    .collect(Collectors.toList());
+        } catch (InterruptedException | ExecutionException e) {
+            Thread.currentThread().interrupt();
+            throw new RuntimeException("Error al consultar movimientos por empleado y estado", e);
+        }
+    }
+
     public List<Movimiento> findByEstado(EstadoPaquete estado) {
         return findByField("estado", estado);
     }

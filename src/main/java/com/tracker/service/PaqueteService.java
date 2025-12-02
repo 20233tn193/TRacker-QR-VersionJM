@@ -4,16 +4,21 @@ import com.tracker.dto.ConfirmacionRecepcionRequest;
 import com.tracker.dto.PaqueteRequest;
 import com.tracker.dto.PaqueteResponse;
 import com.tracker.dto.MovimientoResponse;
+import com.tracker.dto.SatisfaccionResponse;
 import com.tracker.model.EstadoPaquete;
 import com.tracker.model.Paquete;
+import com.tracker.model.Role;
+import com.tracker.model.Usuario;
 import com.tracker.repository.PaqueteRepository;
 import com.tracker.repository.MovimientoRepository;
+import com.tracker.repository.UsuarioRepository;
 import com.tracker.util.QRCodeGenerator;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -27,13 +32,26 @@ public class PaqueteService {
     private MovimientoRepository movimientoRepository;
     
     @Autowired
+    private UsuarioRepository usuarioRepository;
+    
+    @Autowired
     private QRCodeGenerator qrCodeGenerator;
     
     public Paquete crearPaquete(PaqueteRequest request) {
+        Optional<Usuario> usuarioOpt = usuarioRepository.findByEmail(request.getClienteEmail());
+        if (usuarioOpt.isEmpty()) {
+            throw new RuntimeException("Cliente no encontrado con el email proporcionado");
+        }
+        
+        Usuario cliente = usuarioOpt.get();
+        if (cliente.getUbicacion() == null || cliente.getUbicacion().isEmpty()) {
+            throw new RuntimeException("El cliente no tiene una ubicación registrada");
+        }
+        
         Paquete paquete = new Paquete();
         paquete.setDescripcion(request.getDescripcion());
         paquete.setClienteEmail(request.getClienteEmail());
-        paquete.setDireccionOrigen(request.getDireccionOrigen());
+        paquete.setDireccionOrigen(cliente.getUbicacion()); 
         paquete.setDireccionDestino(request.getDireccionDestino());
         paquete.setEstado(EstadoPaquete.RECOLECTADO);
         
@@ -127,6 +145,108 @@ public class PaqueteService {
         } catch (Exception e) {
             throw new RuntimeException("Error al generar código QR", e);
         }
+    }
+    
+    public long obtenerPaquetesPorEstado(EstadoPaquete estado) {
+        return paqueteRepository.countByEstado(estado);
+    }
+    
+    public SatisfaccionResponse calcularIndiceSatisfaccion() {
+        long totalPaquetes = paqueteRepository.countAll();
+        long paquetesEntregados = paqueteRepository.countByEstado(EstadoPaquete.ENTREGADO);
+        
+        double indiceCumplimiento = 0.0;
+        if (totalPaquetes > 0) {
+            indiceCumplimiento = (double) paquetesEntregados / totalPaquetes * 100.0;
+        }
+        
+        return new SatisfaccionResponse(totalPaquetes, paquetesEntregados, indiceCumplimiento);
+    }
+    
+    public SatisfaccionResponse calcularIndiceSatisfaccionPorRepartidor(String repartidorId) {
+        Optional<Usuario> usuarioOpt = usuarioRepository.findById(repartidorId);
+        if (usuarioOpt.isEmpty()) {
+            throw new RuntimeException("Repartidor no encontrado");
+        }
+        
+        Usuario repartidor = usuarioOpt.get();
+        
+        if (repartidor.getRol() != Role.EMPLEADO) {
+            throw new RuntimeException("El usuario especificado no es un repartidor (EMPLEADO)");
+        }
+        
+        List<com.tracker.model.Movimiento> todosLosMovimientos = movimientoRepository.findByEmpleadoId(repartidorId);
+        
+        List<com.tracker.model.Movimiento> movimientosEntregados = 
+                movimientoRepository.findByEmpleadoIdAndEstado(repartidorId, EstadoPaquete.ENTREGADO);
+        
+        Set<String> paquetesUnicos = todosLosMovimientos.stream()
+                .map(com.tracker.model.Movimiento::getPaqueteId)
+                .collect(Collectors.toSet());
+        long totalPaquetes = paquetesUnicos.size();
+        
+        Set<String> paquetesEntregadosUnicos = movimientosEntregados.stream()
+                .map(com.tracker.model.Movimiento::getPaqueteId)
+                .collect(Collectors.toSet());
+        long paquetesEntregados = paquetesEntregadosUnicos.size();
+        
+        double indiceCumplimiento = 0.0;
+        if (totalPaquetes > 0) {
+            indiceCumplimiento = (double) paquetesEntregados / totalPaquetes * 100.0;
+        }
+        
+        return new SatisfaccionResponse(totalPaquetes, paquetesEntregados, indiceCumplimiento);
+    }
+    
+    public SatisfaccionResponse calcularIndiceSatisfaccionPorCliente(String clienteId) {
+        Optional<Usuario> usuarioOpt = usuarioRepository.findById(clienteId);
+        if (usuarioOpt.isEmpty()) {
+            throw new RuntimeException("Cliente no encontrado");
+        }
+        
+        Usuario cliente = usuarioOpt.get();
+        
+        if (cliente.getRol() != Role.CLIENTE) {
+            throw new RuntimeException("El usuario especificado no es un cliente");
+        }
+        
+        String clienteEmail = cliente.getEmail();
+        long totalPaquetes = paqueteRepository.countByClienteEmail(clienteEmail);
+        long paquetesEntregados = paqueteRepository.countByClienteEmailAndEstado(clienteEmail, EstadoPaquete.ENTREGADO);
+        
+        double indiceCumplimiento = 0.0;
+        if (totalPaquetes > 0) {
+            indiceCumplimiento = (double) paquetesEntregados / totalPaquetes * 100.0;
+        }
+        
+        return new SatisfaccionResponse(totalPaquetes, paquetesEntregados, indiceCumplimiento);
+    }
+    
+    public List<PaqueteResponse> obtenerPaquetesPorEmpleado(String empleadoId) {
+        Optional<Usuario> usuarioOpt = usuarioRepository.findById(empleadoId);
+        if (usuarioOpt.isEmpty()) {
+            throw new RuntimeException("Empleado no encontrado");
+        }
+        
+        Usuario empleado = usuarioOpt.get();
+        
+        if (empleado.getRol() != Role.EMPLEADO) {
+            throw new RuntimeException("El usuario especificado no es un empleado");
+        }
+        
+        List<com.tracker.model.Movimiento> movimientos = movimientoRepository.findByEmpleadoId(empleadoId);
+        
+        Set<String> paquetesIds = movimientos.stream()
+                .map(com.tracker.model.Movimiento::getPaqueteId)
+                .collect(Collectors.toSet());
+        
+        return paquetesIds.stream()
+                .map(paqueteId -> {
+                    Optional<Paquete> paqueteOpt = paqueteRepository.findById(paqueteId);
+                    return paqueteOpt.map(this::convertirAPaqueteResponse).orElse(null);
+                })
+                .filter(paquete -> paquete != null)
+                .collect(Collectors.toList());
     }
     
     private PaqueteResponse convertirAPaqueteResponse(Paquete paquete) {
