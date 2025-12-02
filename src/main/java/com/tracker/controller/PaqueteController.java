@@ -10,6 +10,7 @@ import com.tracker.service.PaqueteService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
@@ -29,11 +30,11 @@ public class PaqueteController {
     @Autowired
     private PaqueteService paqueteService;
     
-    @Operation(summary = "Crear paquete", description = "Crea un nuevo paquete y genera un código QR único", security = @SecurityRequirement(name = "bearerAuth"))
+    @Operation(summary = "Crear paquete", description = "Crea un nuevo paquete y genera un código QR único. El empleadoId se obtiene automáticamente de la sesión autenticada.", security = @SecurityRequirement(name = "bearerAuth"))
     @PostMapping
-    public ResponseEntity<ApiResponse> crearPaquete(@Valid @RequestBody PaqueteRequest request) {
+    public ResponseEntity<ApiResponse> crearPaquete(@Valid @RequestBody PaqueteRequest request, HttpServletRequest httpRequest) {
         try {
-            PaqueteResponse response = convertirAPaqueteResponse(paqueteService.crearPaquete(request));
+            PaqueteResponse response = convertirAPaqueteResponse(paqueteService.crearPaquete(request, httpRequest));
             return ResponseEntity.status(HttpStatus.CREATED)
                     .body(ApiResponse.success("Paquete creado exitosamente", response));
         } catch (RuntimeException e) {
@@ -144,12 +145,29 @@ public class PaqueteController {
         }
     }
     
-    @Operation(summary = "Obtener paquetes por empleado", description = "Obtiene todos los paquetes asociados a un empleado específico. Verifica que el usuario tenga rol EMPLEADO.", security = @SecurityRequirement(name = "bearerAuth"))
-    @GetMapping("/empleado/{empleadoId}")
-    public ResponseEntity<ApiResponse> obtenerPaquetesPorEmpleado(@PathVariable String empleadoId) {
+    @Operation(
+        summary = "Obtener paquetes filtrados", 
+        description = "Obtiene paquetes filtrados por empleado, estado y/o mes. Todos los parámetros son opcionales. Formato de mes: YYYY-MM (ej: 2024-01). Si no se proporciona empleadoId, se obtienen todos los paquetes. Si no se proporciona estado, se obtienen paquetes de todos los estados. Si no se proporciona mes, se obtienen paquetes de todos los meses.", 
+        security = @SecurityRequirement(name = "bearerAuth")
+    )
+    @GetMapping("/empleado")
+    public ResponseEntity<ApiResponse> obtenerPaquetesPorEmpleado(
+            @RequestParam(required = false) String empleadoId,
+            @RequestParam(required = false) String estado,
+            @RequestParam(required = false) String mes) {
         try {
-            List<PaqueteResponse> paquetes = paqueteService.obtenerPaquetesPorEmpleado(empleadoId);
-            return ResponseEntity.ok(ApiResponse.success("Paquetes del empleado encontrados", paquetes));
+            EstadoPaquete estadoPaquete = null;
+            if (estado != null && !estado.isBlank()) {
+                try {
+                    estadoPaquete = EstadoPaquete.valueOf(estado.toUpperCase());
+                } catch (IllegalArgumentException e) {
+                    return ResponseEntity.badRequest()
+                            .body(ApiResponse.error("Estado inválido. Estados válidos: RECOLECTADO, EN_TRANSITO, ENTREGADO, CANCELADO"));
+                }
+            }
+            
+            List<PaqueteResponse> paquetes = paqueteService.obtenerPaquetesPorEmpleado(empleadoId, estadoPaquete, mes);
+            return ResponseEntity.ok(ApiResponse.success("Paquetes encontrados", paquetes));
         } catch (RuntimeException e) {
             return ResponseEntity.badRequest().body(ApiResponse.error(e.getMessage()));
         }
@@ -164,6 +182,8 @@ public class PaqueteController {
         response.setClienteEmail(paquete.getClienteEmail());
         response.setDireccionOrigen(paquete.getDireccionOrigen());
         response.setDireccionDestino(paquete.getDireccionDestino());
+        response.setUbicacion(paquete.getUbicacion());
+        response.setEmpleadoId(paquete.getEmpleadoId());
         response.setFechaCreacion(paquete.getFechaCreacion());
         response.setFechaUltimaActualizacion(paquete.getFechaUltimaActualizacion());
         response.setConfirmadoRecepcion(paquete.isConfirmadoRecepcion());

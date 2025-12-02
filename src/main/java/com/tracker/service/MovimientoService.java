@@ -65,8 +65,10 @@ public class MovimientoService {
         // Guardar movimiento
         Movimiento movimientoGuardado = movimientoRepository.save(movimiento);
         
-        // Actualizar estado del paquete
+        // Actualizar estado, empleadoId y ubicación del paquete
         paquete.setEstado(request.getEstado());
+        paquete.setEmpleadoId(empleadoId);
+        paquete.setUbicacion(request.getUbicacion());
         paqueteRepository.save(paquete);
         
         return convertirAMovimientoResponse(movimientoGuardado);
