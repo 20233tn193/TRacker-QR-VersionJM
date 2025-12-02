@@ -4,6 +4,8 @@ import com.tracker.dto.ApiResponse;
 import com.tracker.dto.ConfirmacionRecepcionRequest;
 import com.tracker.dto.PaqueteRequest;
 import com.tracker.dto.PaqueteResponse;
+import com.tracker.dto.SatisfaccionResponse;
+import com.tracker.model.EstadoPaquete;
 import com.tracker.service.PaqueteService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
@@ -15,6 +17,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @RestController
 @RequestMapping("/paquetes")
@@ -89,6 +93,65 @@ public class PaqueteController {
             return new ResponseEntity<>(qrCodeImage, headers, HttpStatus.OK);
         } catch (RuntimeException e) {
             return ResponseEntity.badRequest().build();
+        }
+    }
+    
+    @Operation(summary = "Obtener cantidad de paquetes por estado", description = "Obtiene la cantidad de paquetes que tienen un estado específico")
+    @GetMapping("/estado/{estado}")
+    public ResponseEntity<ApiResponse> obtenerPaquetesPorEstado(@PathVariable String estado) {
+        try {
+            EstadoPaquete estadoPaquete = EstadoPaquete.valueOf(estado.toUpperCase());
+            long cantidad = paqueteService.obtenerPaquetesPorEstado(estadoPaquete);
+            return ResponseEntity.ok(ApiResponse.success("Cantidad de paquetes encontrados", cantidad));
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest()
+                    .body(ApiResponse.error("Estado inválido. Estados válidos: RECOLECTADO, EN_TRANSITO, ENTREGADO, CANCELADO"));
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().body(ApiResponse.error(e.getMessage()));
+        }
+    }
+    
+    @Operation(summary = "Calcular índice de satisfacción", description = "Calcula el índice de cumplimiento comparando la cantidad total de paquetes contra los paquetes entregados")
+    @GetMapping("/satisfaccion")
+    public ResponseEntity<ApiResponse> calcularIndiceSatisfaccion() {
+        try {
+            SatisfaccionResponse response = paqueteService.calcularIndiceSatisfaccion();
+            return ResponseEntity.ok(ApiResponse.success("Índice de satisfacción calculado exitosamente", response));
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().body(ApiResponse.error(e.getMessage()));
+        }
+    }
+    
+    @Operation(summary = "Calcular índice de satisfacción por repartidor", description = "Calcula el índice de cumplimiento de los paquetes entregados por un repartidor específico. Verifica que el usuario tenga rol EMPLEADO.", security = @SecurityRequirement(name = "bearerAuth"))
+    @GetMapping("/satisfaccion/repartidor/{repartidorId}")
+    public ResponseEntity<ApiResponse> calcularIndiceSatisfaccionPorRepartidor(@PathVariable String repartidorId) {
+        try {
+            SatisfaccionResponse response = paqueteService.calcularIndiceSatisfaccionPorRepartidor(repartidorId);
+            return ResponseEntity.ok(ApiResponse.success("Índice de satisfacción del repartidor calculado exitosamente", response));
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().body(ApiResponse.error(e.getMessage()));
+        }
+    }
+    
+    @Operation(summary = "Calcular índice de satisfacción por cliente", description = "Calcula el índice de cumplimiento comparando el total de paquetes del cliente contra los paquetes con estado ENTREGADO. Verifica que el usuario tenga rol CLIENTE.", security = @SecurityRequirement(name = "bearerAuth"))
+    @GetMapping("/satisfaccion/cliente/{clienteId}")
+    public ResponseEntity<ApiResponse> calcularIndiceSatisfaccionPorCliente(@PathVariable String clienteId) {
+        try {
+            SatisfaccionResponse response = paqueteService.calcularIndiceSatisfaccionPorCliente(clienteId);
+            return ResponseEntity.ok(ApiResponse.success("Índice de satisfacción del cliente calculado exitosamente", response));
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().body(ApiResponse.error(e.getMessage()));
+        }
+    }
+    
+    @Operation(summary = "Obtener paquetes por empleado", description = "Obtiene todos los paquetes asociados a un empleado específico. Verifica que el usuario tenga rol EMPLEADO.", security = @SecurityRequirement(name = "bearerAuth"))
+    @GetMapping("/empleado/{empleadoId}")
+    public ResponseEntity<ApiResponse> obtenerPaquetesPorEmpleado(@PathVariable String empleadoId) {
+        try {
+            List<PaqueteResponse> paquetes = paqueteService.obtenerPaquetesPorEmpleado(empleadoId);
+            return ResponseEntity.ok(ApiResponse.success("Paquetes del empleado encontrados", paquetes));
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().body(ApiResponse.error(e.getMessage()));
         }
     }
     
