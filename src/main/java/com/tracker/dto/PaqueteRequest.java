@@ -16,6 +16,9 @@ public class PaqueteRequest {
     @NotBlank(message = "La dirección de destino es obligatoria")
     private String direccionDestino;
     
+    private String empleadoId;
+    private String ubicacion;
+    
     // Constructores
     public PaqueteRequest() {}
     
@@ -42,6 +45,22 @@ public class PaqueteRequest {
     
     public void setDireccionDestino(String direccionDestino) {
         this.direccionDestino = direccionDestino;
+    }
+    
+    public String getEmpleadoId() {
+        return empleadoId;
+    }
+    
+    public void setEmpleadoId(String empleadoId) {
+        this.empleadoId = empleadoId;
+    }
+    
+    public String getUbicacion() {
+        return ubicacion;
+    }
+    
+    public void setUbicacion(String ubicacion) {
+        this.ubicacion = ubicacion;
     }
 }
 

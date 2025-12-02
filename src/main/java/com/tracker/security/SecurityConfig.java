@@ -40,7 +40,7 @@ public class SecurityConfig {
                 .requestMatchers("/migracion/**").permitAll()
                 .requestMatchers("/swagger-ui.html", "/swagger-ui/**", "/v3/api-docs/**", "/api-docs/**").permitAll()
                 .requestMatchers("/usuarios/recoverPassword", "/usuarios/resetPassword").permitAll()
-                .requestMatchers("/usuarios").hasRole("ADMINISTRADOR")
+                .requestMatchers("/usuarios").permitAll()
                 .requestMatchers("/usuarios/**").hasRole("ADMINISTRADOR")
                 .requestMatchers("/movimientos/**").hasAnyRole("EMPLEADO", "ADMINISTRADOR")
                 .requestMatchers("/reportes/**").hasRole("ADMINISTRADOR")

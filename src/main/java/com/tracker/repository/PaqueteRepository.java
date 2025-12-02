@@ -77,8 +77,43 @@ public class PaqueteRepository {
         return findByField("clienteEmail", clienteEmail);
     }
 
+    public List<Paquete> findByEmpleadoId(String empleadoId) {
+        return findByField("empleadoId", empleadoId);
+    }
+
     public List<Paquete> findByEstado(EstadoPaquete estado) {
         return findByField("estado", estado);
+    }
+
+    public List<Paquete> findByEmpleadoIdAndEstado(String empleadoId, EstadoPaquete estado, LocalDateTime inicioMes, LocalDateTime finMes) {
+        try {
+            Query query = collection();
+            
+            if (empleadoId != null && !empleadoId.isBlank()) {
+                query = query.whereEqualTo("empleadoId", empleadoId);
+            }
+            
+            if (estado != null) {
+                query = query.whereEqualTo("estado", estado);
+            }
+            
+            if (inicioMes != null && finMes != null) {
+                Timestamp inicioTimestamp = toTimestamp(inicioMes);
+                Timestamp finTimestamp = toTimestamp(finMes);
+                query = query.whereGreaterThanOrEqualTo("fechaCreacion", inicioTimestamp)
+                            .whereLessThanOrEqualTo("fechaCreacion", finTimestamp);
+            }
+            
+            return query.get()
+                    .get()
+                    .getDocuments()
+                    .stream()
+                    .map(this::fromDocument)
+                    .collect(Collectors.toList());
+        } catch (InterruptedException | ExecutionException e) {
+            Thread.currentThread().interrupt();
+            throw new RuntimeException("Error al consultar paquetes por empleado, estado y mes", e);
+        }
     }
 
     public List<Paquete> findByFechaCreacionBetween(LocalDateTime inicio, LocalDateTime fin) {
