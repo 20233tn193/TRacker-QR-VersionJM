@@ -1,9 +1,6 @@
 package com.tracker.dto;
-
 import com.google.cloud.Timestamp;
 import com.tracker.model.EstadoPaquete;
-
-import java.sql.Time;
 
 public class MovimientoResponse {
     
@@ -16,10 +13,8 @@ public class MovimientoResponse {
     private Timestamp fechaHora;
     private String observaciones;
     
-    // Constructores
     public MovimientoResponse() {}
     
-    // Getters y Setters
     public String getId() {
         return id;
     }

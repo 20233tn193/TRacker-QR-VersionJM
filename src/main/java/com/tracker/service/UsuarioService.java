@@ -1,7 +1,6 @@
 package com.tracker.service;
 
 import com.google.cloud.Timestamp;
-import com.tracker.dto.UsuarioRequest;
 import com.tracker.dto.CrearEmpleadoRequest;
 import com.tracker.dto.ActualizarEmpleadoRequest;
 import com.tracker.model.Role;
@@ -42,7 +41,7 @@ public class UsuarioService {
         usuario.setNombre(request.getNombre());
         usuario.setApellidoPaterno(request.getApellidoPaterno());
         usuario.setApellidoMaterno(request.getApellidoMaterno());
-        usuario.setUbicacion(null); // Empleados/Admins no tienen ubicación
+        usuario.setUbicacion(null);
         usuario.setRol(request.getRol());
         usuario.setActivo(true);
         usuario.setHabilitado2FA(true);
@@ -73,7 +72,6 @@ public class UsuarioService {
         usuario.setNombre(request.getNombre());
         usuario.setApellidoPaterno(request.getApellidoPaterno());
         usuario.setApellidoMaterno(request.getApellidoMaterno());
-        // No actualizar ubicación para empleados/admins
         usuario.setRol(request.getRol());
         usuario.setFechaActualizacion(Timestamp.now());
         
@@ -101,7 +99,7 @@ public class UsuarioService {
         usuario.setNombre(request.getNombre());
         usuario.setApellidoPaterno(request.getApellidoPaterno());
         usuario.setApellidoMaterno(request.getApellidoMaterno());
-        usuario.setFechaActualizacion(Instant.now());
+        usuario.setFechaActualizacion(Timestamp.now());
         
         return usuarioRepository.save(usuario);
     }
