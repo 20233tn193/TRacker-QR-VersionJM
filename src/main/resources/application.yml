@@ -46,7 +46,7 @@ app:
     output-dir: ./reports
   gemini:
     api-key: ${GEMINI_API_KEY:AIzaSyD88B2xq2jVdoNm0k5LiySnITdipEArSSg}
-    api-url: https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent
+    api-url: https://generativelanguage.googleapis.com/v1/models/gemini-pro:generateContent
   almacen:
     direccion: "Ciudad de México, CDMX, México"
     estado: "Ciudad de México"

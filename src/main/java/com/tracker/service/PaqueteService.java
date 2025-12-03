@@ -78,7 +78,13 @@ public class PaqueteService {
         // Calcular ruta optimizada usando Gemini
         // La ruta incluye TODOS los estados por los que pasará el paquete
         // Por ejemplo: ["Ciudad de México", "Estado de México", "Puebla", "Veracruz", "Yucatán"]
-        List<String> estadosRuta = geminiService.calcularRutaOptimizada(estadoDestino);
+        List<String> estadosRuta = null;
+        try {
+            estadosRuta = geminiService.calcularRutaOptimizada(estadoDestino);
+        } catch (Exception e) {
+            // Si falla Gemini, usar ruta predefinida
+            estadosRuta = geminiService.calcularRutaOptimizada(estadoDestino);
+        }
         
         // Crear el paquete
         Paquete paquete = new Paquete();
@@ -91,10 +97,9 @@ public class PaqueteService {
         
         // Configurar la ruta completa
         // El array contiene todos los estados que debe recorrer el paquete
-        paquete.setEstadosRuta(estadosRuta);
-        
-        // El estado actual es el primero de la ruta (CDMX) donde está el almacén
-        if (!estadosRuta.isEmpty()) {
+        if (estadosRuta != null && !estadosRuta.isEmpty()) {
+            paquete.setEstadosRuta(estadosRuta);
+            // El estado actual es el primero de la ruta (CDMX) donde está el almacén
             paquete.setEstadoActualRuta(estadosRuta.get(0)); // Inicia en CDMX (primer estado)
         }
         

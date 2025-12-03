@@ -180,9 +180,11 @@ public class AuthService {
         usuario.setApellidoPaterno(request.getApellidoPaterno());
         usuario.setApellidoMaterno(request.getApellidoMaterno());
         usuario.setUbicacion(request.getUbicacion());
+        usuario.setEstado(request.getEstado());
+        usuario.setCiudad(request.getCiudad());
         usuario.setRol(Role.CLIENTE); // Siempre CLIENTE
         usuario.setActivo(true);
-        usuario.setHabilitado2FA(true); // Habilitar 2FA por defecto
+        usuario.setHabilitado2FA(false); // Desactivar 2FA por defecto para facilitar pruebas
         usuario.setFechaCreacion(Timestamp.now());
         usuario.setFechaActualizacion(Timestamp.now());
         

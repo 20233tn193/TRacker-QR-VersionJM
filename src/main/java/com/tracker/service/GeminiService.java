@@ -2,6 +2,8 @@ package com.tracker.service;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
@@ -15,6 +17,7 @@ import java.util.List;
 @Service
 public class GeminiService {
     
+    private static final Logger logger = LoggerFactory.getLogger(GeminiService.class);
     private static final String ALMACEN_ESTADO = "Ciudad de México";
     private static final List<String> ESTADOS_MEXICO = Arrays.asList(
         "Aguascalientes", "Baja California", "Baja California Sur", "Campeche",
@@ -53,11 +56,22 @@ public class GeminiService {
         }
         
         try {
+            logger.info("🤖 Calculando ruta optimizada con Gemini desde CDMX a {}", estadoDestino);
             String prompt = construirPrompt(estadoDestino);
+            logger.debug("📝 Prompt enviado a Gemini: {}", prompt);
+            
             String response = llamarGeminiAPI(prompt);
-            return parsearRespuesta(response, estadoDestino);
+            logger.debug("📨 Respuesta de Gemini recibida (primeros 200 chars): {}", 
+                response != null && response.length() > 200 ? response.substring(0, 200) : response);
+            
+            List<String> ruta = parsearRespuesta(response, estadoDestino);
+            logger.info("✅ Ruta calculada exitosamente: {} estados", ruta.size());
+            logger.debug("🗺️  Ruta: {}", ruta);
+            
+            return ruta;
         } catch (Exception e) {
-            // En caso de error, devolver ruta simple directa
+            logger.error("❌ Error al llamar a Gemini API: {} - Usando ruta simple", e.getMessage());
+            logger.debug("Stack trace completo:", e);
             return calcularRutaSimple(estadoDestino);
         }
     }
@@ -80,6 +94,9 @@ public class GeminiService {
     private String llamarGeminiAPI(String prompt) {
         String url = apiUrl + "?key=" + apiKey;
         
+        logger.debug("🌐 URL de Gemini: {}", apiUrl);
+        logger.debug("🔑 API Key configurada: {}...", apiKey != null && apiKey.length() > 10 ? apiKey.substring(0, 10) : "NO CONFIGURADA");
+        
         String requestBody = String.format(
             "{\n" +
             "  \"contents\": [{\n" +
@@ -88,15 +105,27 @@ public class GeminiService {
             "    }]\n" +
             "  }]\n" +
             "}",
-            prompt.replace("\"", "\\\"")
+            prompt.replace("\"", "\\\"").replace("\n", "\\n")
         );
         
-        return webClient.post()
-                .uri(url)
-                .bodyValue(requestBody)
-                .retrieve()
-                .bodyToMono(String.class)
-                .block();
+        try {
+            String response = webClient.post()
+                    .uri(url)
+                    .bodyValue(requestBody)
+                    .retrieve()
+                    .bodyToMono(String.class)
+                    .block();
+            
+            if (response == null || response.isEmpty()) {
+                logger.warn("⚠️  Gemini devolvió respuesta vacía");
+                throw new RuntimeException("Respuesta vacía de Gemini");
+            }
+            
+            return response;
+        } catch (Exception e) {
+            logger.error("❌ Error en llamada HTTP a Gemini: {}", e.getMessage());
+            throw new RuntimeException("Error al comunicarse con Gemini API", e);
+        }
     }
     
     private List<String> parsearRespuesta(String response, String estadoDestino) {
@@ -180,15 +209,218 @@ public class GeminiService {
     }
     
     private List<String> calcularRutaSimple(String estadoDestino) {
-        // Ruta simple: CDMX -> Destino (fallback)
+        // Ruta con estados intermedios realistas (fallback mejorado)
+        logger.info("⚠️  Usando fallback - Rutas predefinidas para {}", estadoDestino);
+        
         List<String> ruta = new ArrayList<>();
         ruta.add(ALMACEN_ESTADO);
         
         String estadoNormalizado = normalizarEstado(estadoDestino);
-        if (estadoNormalizado != null && !estadoNormalizado.equalsIgnoreCase(ALMACEN_ESTADO)) {
-            ruta.add(estadoNormalizado);
+        
+        if (estadoNormalizado == null || estadoNormalizado.equalsIgnoreCase(ALMACEN_ESTADO)) {
+            return ruta;
         }
         
+        // Rutas predefinidas realistas basadas en geografía de México
+        // Estas son rutas lógicas siguiendo carreteras principales
+        switch (estadoNormalizado) {
+            // SURESTE
+            case "Yucatán":
+            case "Quintana Roo":
+            case "Campeche":
+                ruta.add("Puebla");
+                ruta.add("Veracruz");
+                ruta.add("Tabasco");
+                ruta.add("Campeche");
+                if (estadoNormalizado.equals("Yucatán")) {
+                    ruta.add("Yucatán");
+                } else if (estadoNormalizado.equals("Quintana Roo")) {
+                    ruta.add("Yucatán");
+                    ruta.add("Quintana Roo");
+                }
+                break;
+                
+            // SUR
+            case "Chiapas":
+                ruta.add("Puebla");
+                ruta.add("Oaxaca");
+                ruta.add("Chiapas");
+                break;
+                
+            case "Oaxaca":
+                ruta.add("Puebla");
+                ruta.add("Oaxaca");
+                break;
+                
+            case "Guerrero":
+                ruta.add("Morelos");
+                ruta.add("Guerrero");
+                break;
+                
+            // GOLFO DE MÉXICO
+            case "Veracruz":
+                ruta.add("Puebla");
+                ruta.add("Veracruz");
+                break;
+                
+            case "Tabasco":
+                ruta.add("Puebla");
+                ruta.add("Veracruz");
+                ruta.add("Tabasco");
+                break;
+                
+            // OCCIDENTE
+            case "Jalisco":
+                ruta.add("Querétaro");
+                ruta.add("Guanajuato");
+                ruta.add("Jalisco");
+                break;
+                
+            case "Michoacán":
+                ruta.add("México");
+                ruta.add("Michoacán");
+                break;
+                
+            case "Colima":
+                ruta.add("Querétaro");
+                ruta.add("Guanajuato");
+                ruta.add("Jalisco");
+                ruta.add("Colima");
+                break;
+                
+            case "Nayarit":
+                ruta.add("Querétaro");
+                ruta.add("Guanajuato");
+                ruta.add("Jalisco");
+                ruta.add("Nayarit");
+                break;
+                
+            // NOROESTE
+            case "Sinaloa":
+                ruta.add("Querétaro");
+                ruta.add("Guanajuato");
+                ruta.add("Zacatecas");
+                ruta.add("Durango");
+                ruta.add("Sinaloa");
+                break;
+                
+            case "Sonora":
+                ruta.add("Querétaro");
+                ruta.add("Guanajuato");
+                ruta.add("Zacatecas");
+                ruta.add("Durango");
+                ruta.add("Sinaloa");
+                ruta.add("Sonora");
+                break;
+                
+            case "Baja California":
+                ruta.add("Querétaro");
+                ruta.add("Guanajuato");
+                ruta.add("Zacatecas");
+                ruta.add("Durango");
+                ruta.add("Sinaloa");
+                ruta.add("Sonora");
+                ruta.add("Baja California");
+                break;
+                
+            case "Baja California Sur":
+                ruta.add("Querétaro");
+                ruta.add("Guanajuato");
+                ruta.add("Zacatecas");
+                ruta.add("Durango");
+                ruta.add("Sinaloa");
+                ruta.add("Baja California Sur");
+                break;
+                
+            // NORTE
+            case "Chihuahua":
+                ruta.add("Querétaro");
+                ruta.add("Zacatecas");
+                ruta.add("Durango");
+                ruta.add("Chihuahua");
+                break;
+                
+            case "Coahuila":
+                ruta.add("Querétaro");
+                ruta.add("San Luis Potosí");
+                ruta.add("Coahuila");
+                break;
+                
+            case "Nuevo León":
+                ruta.add("Querétaro");
+                ruta.add("San Luis Potosí");
+                ruta.add("Nuevo León");
+                break;
+                
+            case "Tamaulipas":
+                ruta.add("Querétaro");
+                ruta.add("San Luis Potosí");
+                ruta.add("Tamaulipas");
+                break;
+                
+            // CENTRO
+            case "Puebla":
+                ruta.add("Puebla");
+                break;
+                
+            case "Tlaxcala":
+                ruta.add("Puebla");
+                ruta.add("Tlaxcala");
+                break;
+                
+            case "Hidalgo":
+                ruta.add("Hidalgo");
+                break;
+                
+            case "Morelos":
+                ruta.add("Morelos");
+                break;
+                
+            case "México":
+                ruta.add("México");
+                break;
+                
+            case "Querétaro":
+                ruta.add("Querétaro");
+                break;
+                
+            case "Guanajuato":
+                ruta.add("Querétaro");
+                ruta.add("Guanajuato");
+                break;
+                
+            case "San Luis Potosí":
+                ruta.add("Querétaro");
+                ruta.add("San Luis Potosí");
+                break;
+                
+            case "Aguascalientes":
+                ruta.add("Querétaro");
+                ruta.add("Guanajuato");
+                ruta.add("Aguascalientes");
+                break;
+                
+            case "Zacatecas":
+                ruta.add("Querétaro");
+                ruta.add("San Luis Potosí");
+                ruta.add("Zacatecas");
+                break;
+                
+            case "Durango":
+                ruta.add("Querétaro");
+                ruta.add("Zacatecas");
+                ruta.add("Durango");
+                break;
+                
+            default:
+                // Para estados no mapeados, ruta simple directa
+                if (!estadoNormalizado.equalsIgnoreCase(ALMACEN_ESTADO)) {
+                    ruta.add(estadoNormalizado);
+                }
+                break;
+        }
+        
+        logger.info("📍 Ruta predefinida calculada: {}", ruta);
         return ruta;
     }
 }

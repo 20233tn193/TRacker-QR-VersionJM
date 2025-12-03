@@ -1,13 +1,14 @@
 package com.tracker.service;
 
-import com.tracker.model.Movimiento;
-import com.tracker.model.Paquete;
-import com.tracker.repository.MovimientoRepository;
-import com.tracker.repository.PaqueteRepository;
 import com.itextpdf.text.*;
 import com.itextpdf.text.pdf.PdfPCell;
 import com.itextpdf.text.pdf.PdfPTable;
 import com.itextpdf.text.pdf.PdfWriter;
+import com.tracker.model.EstadoPaquete;
+import com.tracker.model.Movimiento;
+import com.tracker.model.Paquete;
+import com.tracker.repository.MovimientoRepository;
+import com.tracker.repository.PaqueteRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -146,7 +147,7 @@ public class ReporteService {
         List<Paquete> paquetes = paqueteRepository.findByFechaCreacionBetween(inicio, fin);
         
         return paquetes.stream()
-                .filter(p -> p.getEstado() == com.tracker.model.EstadoPaquete.ENTREGADO)
+                .filter(p -> p.getEstado() == EstadoPaquete.ENTREGADO)
                 .collect(Collectors.groupingBy(
                         p -> p.getFechaCreacion().toDate().toInstant()
                                 .atZone(ZoneOffset.UTC).toLocalDateTime().getMonth().name(),

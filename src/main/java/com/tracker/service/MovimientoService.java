@@ -237,7 +237,10 @@ public class MovimientoService {
             case RECOLECTADO:
                 return nuevoEstado == EstadoPaquete.EN_TRANSITO || nuevoEstado == EstadoPaquete.CANCELADO;
             case EN_TRANSITO:
-                return nuevoEstado == EstadoPaquete.ENTREGADO || nuevoEstado == EstadoPaquete.CANCELADO;
+                // Permitir múltiples movimientos EN_TRANSITO para registrar paso por cada estado/ciudad
+                return nuevoEstado == EstadoPaquete.EN_TRANSITO || 
+                       nuevoEstado == EstadoPaquete.ENTREGADO || 
+                       nuevoEstado == EstadoPaquete.CANCELADO;
             case ENTREGADO:
             case CANCELADO:
                 return false; // No se pueden cambiar estados finales

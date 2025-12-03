@@ -9,6 +9,7 @@ public class PaqueteResponse {
     private String id;
     private String codigoQR;
     private String qrImageUrl; // URL de la imagen QR en Firebase Storage
+    private String qrImageBase64; // Imagen QR en base64 (opcional, para mostrar inline)
     private String descripcion;
     private EstadoPaquete estado;
     private String clienteEmail;
@@ -50,6 +51,14 @@ public class PaqueteResponse {
     
     public void setQrImageUrl(String qrImageUrl) {
         this.qrImageUrl = qrImageUrl;
+    }
+    
+    public String getQrImageBase64() {
+        return qrImageBase64;
+    }
+    
+    public void setQrImageBase64(String qrImageBase64) {
+        this.qrImageBase64 = qrImageBase64;
     }
     
     public String getDescripcion() {
