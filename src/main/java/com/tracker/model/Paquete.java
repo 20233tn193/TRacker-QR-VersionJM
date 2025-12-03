@@ -1,11 +1,13 @@
 package com.tracker.model;
 
 import com.google.cloud.Timestamp;
+import java.util.List;
 
 public class Paquete {
     
     private String id;
     private String codigoQR;
+    private String qrImageUrl; // URL de la imagen QR en Firebase Storage
     private String descripcion;
     private EstadoPaquete estado;
     private String clienteEmail;
@@ -18,6 +20,8 @@ public class Paquete {
     private boolean confirmadoRecepcion;
     private Timestamp fechaConfirmacionRecepcion;
     private String firmaDigital;
+    private List<String> estadosRuta; // Lista de estados por los que pasará el paquete
+    private String estadoActualRuta; // Estado actual en la ruta
     
     // Constructores
     public Paquete() {
@@ -42,6 +46,14 @@ public class Paquete {
     
     public void setCodigoQR(String codigoQR) {
         this.codigoQR = codigoQR;
+    }
+    
+    public String getQrImageUrl() {
+        return qrImageUrl;
+    }
+    
+    public void setQrImageUrl(String qrImageUrl) {
+        this.qrImageUrl = qrImageUrl;
     }
     
     public String getDescripcion() {
@@ -142,6 +154,22 @@ public class Paquete {
     
     public void setFirmaDigital(String firmaDigital) {
         this.firmaDigital = firmaDigital;
+    }
+    
+    public List<String> getEstadosRuta() {
+        return estadosRuta;
+    }
+    
+    public void setEstadosRuta(List<String> estadosRuta) {
+        this.estadosRuta = estadosRuta;
+    }
+    
+    public String getEstadoActualRuta() {
+        return estadoActualRuta;
+    }
+    
+    public void setEstadoActualRuta(String estadoActualRuta) {
+        this.estadoActualRuta = estadoActualRuta;
     }
 }
 

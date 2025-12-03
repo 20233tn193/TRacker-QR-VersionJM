@@ -26,6 +26,7 @@ public class FirebaseConfig {
 
         FirebaseOptions options = FirebaseOptions.builder()
                 .setCredentials(GoogleCredentials.fromStream(firebaseServiceAccount.getInputStream()))
+                .setStorageBucket("tracker-qr.firebasestorage.app")
                 .build();
 
         return FirebaseApp.initializeApp(options);

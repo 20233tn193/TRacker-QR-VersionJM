@@ -23,6 +23,11 @@ public class RegistroClienteRequest {
     @NotBlank(message = "La ubicación es obligatoria")
     private String ubicacion; // Municipio de Morelos
     
+    @NotBlank(message = "El estado es obligatorio")
+    private String estado; // Estado de la República Mexicana
+    
+    private String ciudad; // Ciudad (opcional)
+    
     // Constructores
     public RegistroClienteRequest() {}
     
@@ -73,5 +78,21 @@ public class RegistroClienteRequest {
     
     public void setUbicacion(String ubicacion) {
         this.ubicacion = ubicacion;
+    }
+    
+    public String getEstado() {
+        return estado;
+    }
+    
+    public void setEstado(String estado) {
+        this.estado = estado;
+    }
+    
+    public String getCiudad() {
+        return ciudad;
+    }
+    
+    public void setCiudad(String ciudad) {
+        this.ciudad = ciudad;
     }
 }
