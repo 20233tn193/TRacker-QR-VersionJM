@@ -8,6 +8,7 @@ public class PaqueteResponse {
     
     private String id;
     private String codigoQR;
+    private String qrImageUrl; // URL de la imagen QR en Firebase Storage
     private String descripcion;
     private EstadoPaquete estado;
     private String clienteEmail;
@@ -19,6 +20,8 @@ public class PaqueteResponse {
     private Timestamp fechaUltimaActualizacion;
     private boolean confirmadoRecepcion;
     private Timestamp fechaConfirmacionRecepcion;
+    private List<String> estadosRuta; // Lista de estados por los que pasará el paquete
+    private String estadoActualRuta; // Estado actual en la ruta
     private List<MovimientoResponse> historialMovimientos;
     
     // Constructores
@@ -39,6 +42,14 @@ public class PaqueteResponse {
     
     public void setCodigoQR(String codigoQR) {
         this.codigoQR = codigoQR;
+    }
+    
+    public String getQrImageUrl() {
+        return qrImageUrl;
+    }
+    
+    public void setQrImageUrl(String qrImageUrl) {
+        this.qrImageUrl = qrImageUrl;
     }
     
     public String getDescripcion() {
@@ -127,6 +138,22 @@ public class PaqueteResponse {
     
     public void setFechaConfirmacionRecepcion(Timestamp fechaConfirmacionRecepcion) {
         this.fechaConfirmacionRecepcion = fechaConfirmacionRecepcion;
+    }
+    
+    public List<String> getEstadosRuta() {
+        return estadosRuta;
+    }
+    
+    public void setEstadosRuta(List<String> estadosRuta) {
+        this.estadosRuta = estadosRuta;
+    }
+    
+    public String getEstadoActualRuta() {
+        return estadoActualRuta;
+    }
+    
+    public void setEstadoActualRuta(String estadoActualRuta) {
+        this.estadoActualRuta = estadoActualRuta;
     }
     
     public List<MovimientoResponse> getHistorialMovimientos() {

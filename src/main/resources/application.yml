@@ -43,9 +43,13 @@ app:
   qr:
     base-url: ${QR_BASE_URL:http://localhost:8080/api/paquetes}
   report:
-    output-dir: ${REPORT_OUTPUT_DIR:./reports}
-  password-reset:
-    base-url: ${PASSWORD_RESET_BASE_URL:http://localhost:8080/api/usuarios}
+    output-dir: ./reports
+  gemini:
+    api-key: ${GEMINI_API_KEY:AIzaSyD88B2xq2jVdoNm0k5LiySnITdipEArSSg}
+    api-url: https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent
+  almacen:
+    direccion: "Ciudad de México, CDMX, México"
+    estado: "Ciudad de México"
 
 springdoc:
   api-docs:

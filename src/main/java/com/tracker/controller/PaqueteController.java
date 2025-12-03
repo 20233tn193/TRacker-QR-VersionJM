@@ -34,7 +34,7 @@ public class PaqueteController {
     @PostMapping
     public ResponseEntity<ApiResponse> crearPaquete(@Valid @RequestBody PaqueteRequest request, HttpServletRequest httpRequest) {
         try {
-            PaqueteResponse response = convertirAPaqueteResponse(paqueteService.crearPaquete(request, httpRequest));
+            PaqueteResponse response = convertirAPaqueteResponse(paqueteService.crearPaquete(request));
             return ResponseEntity.status(HttpStatus.CREATED)
                     .body(ApiResponse.success("Paquete creado exitosamente", response));
         } catch (RuntimeException e) {
@@ -177,6 +177,7 @@ public class PaqueteController {
         PaqueteResponse response = new PaqueteResponse();
         response.setId(paquete.getId());
         response.setCodigoQR(paquete.getCodigoQR());
+        response.setQrImageUrl(paquete.getQrImageUrl());
         response.setDescripcion(paquete.getDescripcion());
         response.setEstado(paquete.getEstado());
         response.setClienteEmail(paquete.getClienteEmail());

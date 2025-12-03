@@ -107,6 +107,18 @@
             <version>9.2.0</version>
         </dependency>
         
+        <!-- HTTP Client para Gemini API -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-webflux</artifactId>
+        </dependency>
+        
+        <!-- JSON Processing -->
+        <dependency>
+            <groupId>com.fasterxml.jackson.core</groupId>
+            <artifactId>jackson-databind</artifactId>
+        </dependency>
+        
         <!-- Lombok (opcional, para reducir boilerplate) -->
         <dependency>
             <groupId>org.projectlombok</groupId>

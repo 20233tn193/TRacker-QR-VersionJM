@@ -1,5 +1,6 @@
 package com.tracker.service;
 
+import com.google.cloud.Timestamp;
 import com.tracker.dto.ConfirmacionRecepcionRequest;
 import com.tracker.dto.PaqueteRequest;
 import com.tracker.dto.PaqueteResponse;
@@ -8,9 +9,8 @@ import com.tracker.dto.SatisfaccionResponse;
 import com.tracker.model.EstadoPaquete;
 import com.tracker.model.Movimiento;
 import com.tracker.model.Paquete;
-import com.tracker.model.Role;
 import com.tracker.model.Usuario;
-import com.google.cloud.Timestamp;
+import com.tracker.model.Role;
 import com.tracker.repository.PaqueteRepository;
 import com.tracker.repository.MovimientoRepository;
 import com.tracker.repository.UsuarioRepository;
@@ -18,6 +18,7 @@ import com.tracker.util.QRCodeGenerator;
 import com.tracker.util.JwtUtil;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -46,62 +47,88 @@ public class PaqueteService {
     private QRCodeGenerator qrCodeGenerator;
     
     @Autowired
-    private JwtUtil jwtUtil;
+    private GeminiService geminiService;
     
-    public Paquete crearPaquete(PaqueteRequest request, HttpServletRequest httpRequest) {
-        Optional<Usuario> usuarioOpt = usuarioRepository.findByEmail(request.getClienteEmail());
-        if (usuarioOpt.isEmpty()) {
-            throw new RuntimeException("Cliente no encontrado con el email proporcionado");
+    @Autowired
+    private FirebaseStorageService firebaseStorageService;
+    
+    @Value("${app.almacen.direccion:Ciudad de México, CDMX, México}")
+    private String direccionAlmacen;
+    
+    @Value("${app.almacen.estado:Ciudad de México}")
+    private String estadoAlmacen;
+    
+    @Value("${app.qr.base-url:http://localhost:8080/api/paquetes}")
+    private String qrBaseUrl;
+    
+    public Paquete crearPaquete(PaqueteRequest request) {
+        // Obtener información del cliente
+        Optional<Usuario> clienteOpt = usuarioRepository.findByEmail(request.getClienteEmail());
+        if (clienteOpt.isEmpty()) {
+            throw new RuntimeException("Cliente no encontrado con el email: " + request.getClienteEmail());
         }
         
-        Usuario cliente = usuarioOpt.get();
-        if (cliente.getUbicacion() == null || cliente.getUbicacion().isEmpty()) {
-            throw new RuntimeException("El cliente no tiene una ubicación registrada");
+        Usuario cliente = clienteOpt.get();
+        String estadoDestino = cliente.getEstado();
+        
+        if (estadoDestino == null || estadoDestino.trim().isEmpty()) {
+            throw new RuntimeException("El cliente no tiene un estado registrado. Por favor, actualice la información del cliente.");
         }
         
-        String token = extractToken(httpRequest);
-        String empleadoId = jwtUtil.extractUserId(token);
-        String role = jwtUtil.extractRole(token);
+        // Calcular ruta optimizada usando Gemini
+        // La ruta incluye TODOS los estados por los que pasará el paquete
+        // Por ejemplo: ["Ciudad de México", "Estado de México", "Puebla", "Veracruz", "Yucatán"]
+        List<String> estadosRuta = geminiService.calcularRutaOptimizada(estadoDestino);
         
-        if (!role.equals(Role.EMPLEADO.name())) {
-            throw new RuntimeException("Solo los empleados pueden crear paquetes");
-        }
-        
-        Optional<Usuario> empleadoOpt = usuarioRepository.findById(empleadoId);
-        if (empleadoOpt.isEmpty()) {
-            throw new RuntimeException("Empleado no encontrado");
-        }
-        
-        Usuario empleado = empleadoOpt.get();
-        if (empleado.getRol() != Role.EMPLEADO) {
-            throw new RuntimeException("El usuario autenticado no es un empleado");
-        }
-        
+        // Crear el paquete
         Paquete paquete = new Paquete();
         paquete.setDescripcion(request.getDescripcion());
         paquete.setClienteEmail(request.getClienteEmail());
-        paquete.setDireccionOrigen(cliente.getUbicacion()); 
+        // Siempre el origen es el almacén en CDMX
+        paquete.setDireccionOrigen(direccionAlmacen);
         paquete.setDireccionDestino(request.getDireccionDestino());
         paquete.setEstado(EstadoPaquete.RECOLECTADO);
-        paquete.setEmpleadoId(empleadoId);
-        paquete.setUbicacion(request.getUbicacion());
+        
+        // Configurar la ruta completa
+        // El array contiene todos los estados que debe recorrer el paquete
+        paquete.setEstadosRuta(estadosRuta);
+        
+        // El estado actual es el primero de la ruta (CDMX) donde está el almacén
+        if (!estadosRuta.isEmpty()) {
+            paquete.setEstadoActualRuta(estadosRuta.get(0)); // Inicia en CDMX (primer estado)
+        }
         
         // Generar código QR único
         String codigoQR = generarCodigoQRUnico();
         paquete.setCodigoQR(codigoQR);
         
+        // Guardar el paquete primero para obtener el ID
         Paquete paqueteGuardado = paqueteRepository.save(paquete);
         
-        Movimiento movimiento = new Movimiento();
-        movimiento.setPaqueteId(paqueteGuardado.getId());
-        movimiento.setEstado(EstadoPaquete.RECOLECTADO);
-        movimiento.setUbicacion(request.getUbicacion());
-        movimiento.setEmpleadoId(empleadoId);
-        movimiento.setEmpleadoNombre(empleado.getNombre() + " " + empleado.getApellidos());
-        movimiento.setFechaHora(Timestamp.now());
-        movimiento.setObservaciones("Paquete recolectado por el repartidor " + empleado.getNombre() + " " + empleado.getApellidos());
-        
-        movimientoRepository.save(movimiento);
+        // Generar imagen QR y subirla a Firebase Storage
+        try {
+            // Generar URL completa para el QR
+            String urlCompleta = qrBaseUrl + "/qr/" + codigoQR;
+            byte[] qrImageBytes = qrCodeGenerator.generateQRCodeImage(urlCompleta);
+            
+            // Subir a Firebase Storage con el ID del paquete como nombre de archivo
+            String fileName = paqueteGuardado.getId() + ".png";
+            String qrImageUrl = firebaseStorageService.uploadFile(
+                qrImageBytes, 
+                fileName, 
+                "image/png", 
+                "qr-codes"
+            );
+            
+            // Actualizar el paquete con la URL de la imagen QR
+            paqueteGuardado.setQrImageUrl(qrImageUrl);
+            paqueteRepository.save(paqueteGuardado);
+            
+        } catch (Exception e) {
+            // Si falla la subida del QR, el paquete ya está creado
+            // Registrar el error pero no fallar la creación del paquete
+            System.err.println("Error al subir QR a Firebase Storage: " + e.getMessage());
+        }
         
         return paqueteGuardado;
     }
@@ -193,9 +220,27 @@ public class PaqueteService {
     
     public byte[] generarQRCodeImage(String codigoQR) {
         try {
-            return qrCodeGenerator.generateQRCodeImage(codigoQR);
+            // Buscar el paquete por código QR
+            Optional<Paquete> paqueteOpt = paqueteRepository.findByCodigoQR(codigoQR);
+            
+            if (paqueteOpt.isEmpty()) {
+                throw new RuntimeException("Paquete no encontrado");
+            }
+            
+            Paquete paquete = paqueteOpt.get();
+            
+            // Si ya existe la imagen en Firebase Storage, obtenerla de ahí
+            if (paquete.getQrImageUrl() != null && !paquete.getQrImageUrl().isEmpty()) {
+                String filePath = "qr-codes/" + paquete.getId() + ".png";
+                return firebaseStorageService.downloadFile(filePath);
+            }
+            
+            // Si no existe, generarla dinámicamente (fallback)
+            String urlCompleta = qrBaseUrl + "/qr/" + codigoQR;
+            return qrCodeGenerator.generateQRCodeImage(urlCompleta);
+            
         } catch (Exception e) {
-            throw new RuntimeException("Error al generar código QR", e);
+            throw new RuntimeException("Error al obtener imagen del código QR", e);
         }
     }
     
@@ -312,6 +357,7 @@ public class PaqueteService {
         PaqueteResponse response = new PaqueteResponse();
         response.setId(paquete.getId());
         response.setCodigoQR(paquete.getCodigoQR());
+        response.setQrImageUrl(paquete.getQrImageUrl());
         response.setDescripcion(paquete.getDescripcion());
         response.setEstado(paquete.getEstado());
         response.setClienteEmail(paquete.getClienteEmail());
@@ -323,6 +369,8 @@ public class PaqueteService {
         response.setFechaUltimaActualizacion(paquete.getFechaUltimaActualizacion());
         response.setConfirmadoRecepcion(paquete.isConfirmadoRecepcion());
         response.setFechaConfirmacionRecepcion(paquete.getFechaConfirmacionRecepcion());
+        response.setEstadosRuta(paquete.getEstadosRuta());
+        response.setEstadoActualRuta(paquete.getEstadoActualRuta());
         return response;
     }
     
