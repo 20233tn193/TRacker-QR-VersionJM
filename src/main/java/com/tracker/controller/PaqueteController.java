@@ -173,6 +173,17 @@ public class PaqueteController {
         }
     }
     
+    @Operation(summary = "Obtener 10 paquetes actualizados recientemente", description = "Obtiene los 10 paquetes más recientemente actualizados, ordenados por fechaUltimaActualizacion en orden descendente")
+    @GetMapping("/recientes")
+    public ResponseEntity<ApiResponse> obtener10PaquetesRecientes() {
+        try {
+            List<PaqueteResponse> paquetes = paqueteService.obtener10PaquetesRecientes();
+            return ResponseEntity.ok(ApiResponse.success("Paquetes recientes encontrados", paquetes));
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().body(ApiResponse.error(e.getMessage()));
+        }
+    }
+    
     private PaqueteResponse convertirAPaqueteResponse(com.tracker.model.Paquete paquete) {
         PaqueteResponse response = new PaqueteResponse();
         response.setId(paquete.getId());

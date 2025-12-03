@@ -307,6 +307,13 @@ public class PaqueteService {
                 .map(this::convertirAPaqueteResponse)
                 .collect(Collectors.toList());
     }
+
+    public List<PaqueteResponse> obtener10PaquetesRecientes() {
+        return paqueteRepository.findTop10ByFechaUltimaActualizacionDesc()
+                .stream()
+                .map(this::convertirAPaqueteResponse)
+                .collect(Collectors.toList());
+    }
     
     private PaqueteResponse convertirAPaqueteResponse(Paquete paquete) {
         PaqueteResponse response = new PaqueteResponse();

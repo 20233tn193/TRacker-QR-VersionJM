@@ -176,6 +176,23 @@ public class PaqueteRepository {
         }
     }
 
+    public List<Paquete> findTop10ByFechaUltimaActualizacionDesc() {
+        try {
+            return collection()
+                    .orderBy("fechaUltimaActualizacion", Query.Direction.DESCENDING)
+                    .limit(10)
+                    .get()
+                    .get()
+                    .getDocuments()
+                    .stream()
+                    .map(this::fromDocument)
+                    .collect(Collectors.toList());
+        } catch (InterruptedException | ExecutionException e) {
+            Thread.currentThread().interrupt();
+            throw new RuntimeException("Error al obtener los 10 paquetes más recientes", e);
+        }
+    }
+
     private List<Paquete> findByField(String field, Object value) {
         try {
             return collection()
