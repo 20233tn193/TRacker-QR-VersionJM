@@ -308,6 +308,56 @@ public class PaqueteService {
                 .collect(Collectors.toList());
     }
 
+    public List<PaqueteResponse> obtenerPaquetesFiltrados(Role rol, String usuarioId, EstadoPaquete estado, LocalDateTime fechaInicio, LocalDateTime fechaFin, String mes) {
+        String empleadoId = null;
+        String clienteEmail = null;
+        
+        if (usuarioId != null && !usuarioId.isBlank()) {
+            Optional<Usuario> usuarioOpt = usuarioRepository.findById(usuarioId);
+            if (usuarioOpt.isEmpty()) {
+                throw new RuntimeException("Usuario no encontrado");
+            }
+            
+            Usuario usuario = usuarioOpt.get();
+            
+            if (rol != null && usuario.getRol() != rol) {
+                throw new RuntimeException("El usuario especificado no tiene el rol " + rol.name());
+            }
+            
+            if (usuario.getRol() == Role.EMPLEADO) {
+                empleadoId = usuarioId;
+            } else if (usuario.getRol() == Role.CLIENTE) {
+                clienteEmail = usuario.getEmail();
+            }
+        } else if (rol != null) {
+            if (rol != Role.ADMINISTRADOR && rol != Role.EMPLEADO && rol != Role.CLIENTE) {
+                throw new RuntimeException("Rol inválido");
+            }
+        }
+        
+        if ((fechaInicio != null || fechaFin != null) && mes != null && !mes.isBlank()) {
+            throw new RuntimeException("No se pueden usar fechaInicio/fechaFin y mes al mismo tiempo. Use uno u otro.");
+        }
+        
+        LocalDateTime fechaInicioFinal = fechaInicio;
+        LocalDateTime fechaFinFinal = fechaFin;
+        
+        if (mes != null && !mes.isBlank()) {
+            try {
+                YearMonth yearMonth = YearMonth.parse(mes, DateTimeFormatter.ofPattern("yyyy-MM"));
+                fechaInicioFinal = yearMonth.atDay(1).atStartOfDay();
+                fechaFinFinal = yearMonth.atEndOfMonth().atTime(23, 59, 59);
+            } catch (DateTimeParseException e) {
+                throw new RuntimeException("Formato de mes inválido. Use el formato YYYY-MM (ej: 2024-01)");
+            }
+        }
+        
+        return paqueteRepository.findWithFilters(empleadoId, clienteEmail, estado, fechaInicioFinal, fechaFinFinal)
+                .stream()
+                .map(this::convertirAPaqueteResponse)
+                .collect(Collectors.toList());
+    }
+
     public List<PaqueteResponse> obtener10PaquetesRecientes() {
         return paqueteRepository.findTop10ByFechaUltimaActualizacionDesc()
                 .stream()

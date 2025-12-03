@@ -6,6 +6,7 @@ import com.tracker.dto.PaqueteRequest;
 import com.tracker.dto.PaqueteResponse;
 import com.tracker.dto.SatisfaccionResponse;
 import com.tracker.model.EstadoPaquete;
+import com.tracker.model.Role;
 import com.tracker.service.PaqueteService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
@@ -19,6 +20,9 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
 import java.util.List;
 
 @RestController
@@ -147,15 +151,28 @@ public class PaqueteController {
     
     @Operation(
         summary = "Obtener paquetes filtrados", 
-        description = "Obtiene paquetes filtrados por empleado, estado y/o mes. Todos los parámetros son opcionales. Formato de mes: YYYY-MM (ej: 2024-01). Si no se proporciona empleadoId, se obtienen todos los paquetes. Si no se proporciona estado, se obtienen paquetes de todos los estados. Si no se proporciona mes, se obtienen paquetes de todos los meses.", 
+        description = "Obtiene paquetes filtrados por rol, usuario, estado y/o rango de fechas. Parámetros: rol (CLIENTE, EMPLEADO, ADMINISTRADOR), usuarioId (ID del usuario según el rol), estado (RECOLECTADO, EN_TRANSITO, ENTREGADO, CANCELADO), fechaInicio/fechaFin (formato: yyyy-MM-ddTHH:mm:ss) o mes (formato: YYYY-MM). fechaInicio/fechaFin y mes son excluyentes. Todos los parámetros son opcionales.", 
         security = @SecurityRequirement(name = "bearerAuth")
     )
     @GetMapping("/empleado")
-    public ResponseEntity<ApiResponse> obtenerPaquetesPorEmpleado(
-            @RequestParam(required = false) String empleadoId,
+    public ResponseEntity<ApiResponse> obtenerPaquetesFiltrados(
+            @RequestParam(required = false) String rol,
+            @RequestParam(required = false) String usuarioId,
             @RequestParam(required = false) String estado,
+            @RequestParam(required = false) String fechaInicio,
+            @RequestParam(required = false) String fechaFin,
             @RequestParam(required = false) String mes) {
         try {
+            Role roleEnum = null;
+            if (rol != null && !rol.isBlank()) {
+                try {
+                    roleEnum = Role.valueOf(rol.toUpperCase());
+                } catch (IllegalArgumentException e) {
+                    return ResponseEntity.badRequest()
+                            .body(ApiResponse.error("Rol inválido. Roles válidos: CLIENTE, EMPLEADO, ADMINISTRADOR"));
+                }
+            }
+            
             EstadoPaquete estadoPaquete = null;
             if (estado != null && !estado.isBlank()) {
                 try {
@@ -166,7 +183,36 @@ public class PaqueteController {
                 }
             }
             
-            List<PaqueteResponse> paquetes = paqueteService.obtenerPaquetesPorEmpleado(empleadoId, estadoPaquete, mes);
+            LocalDateTime fechaInicioDateTime = null;
+            LocalDateTime fechaFinDateTime = null;
+            
+            if (fechaInicio != null && !fechaInicio.isBlank()) {
+                try {
+                    fechaInicioDateTime = LocalDateTime.parse(fechaInicio, 
+                        DateTimeFormatter.ISO_LOCAL_DATE_TIME);
+                } catch (DateTimeParseException e) {
+                    return ResponseEntity.badRequest()
+                            .body(ApiResponse.error("Formato de fechaInicio inválido. Use el formato: yyyy-MM-ddTHH:mm:ss (ej: 2024-01-15T00:00:00)"));
+                }
+            }
+            
+            if (fechaFin != null && !fechaFin.isBlank()) {
+                try {
+                    fechaFinDateTime = LocalDateTime.parse(fechaFin, 
+                        DateTimeFormatter.ISO_LOCAL_DATE_TIME);
+                } catch (DateTimeParseException e) {
+                    return ResponseEntity.badRequest()
+                            .body(ApiResponse.error("Formato de fechaFin inválido. Use el formato: yyyy-MM-ddTHH:mm:ss (ej: 2024-01-15T23:59:59)"));
+                }
+            }
+            
+            if (fechaInicioDateTime != null && fechaFinDateTime != null && fechaInicioDateTime.isAfter(fechaFinDateTime)) {
+                return ResponseEntity.badRequest()
+                        .body(ApiResponse.error("fechaInicio debe ser anterior o igual a fechaFin"));
+            }
+            
+            List<PaqueteResponse> paquetes = paqueteService.obtenerPaquetesFiltrados(
+                    roleEnum, usuarioId, estadoPaquete, fechaInicioDateTime, fechaFinDateTime, mes);
             return ResponseEntity.ok(ApiResponse.success("Paquetes encontrados", paquetes));
         } catch (RuntimeException e) {
             return ResponseEntity.badRequest().body(ApiResponse.error(e.getMessage()));

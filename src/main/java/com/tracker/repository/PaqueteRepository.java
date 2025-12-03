@@ -193,6 +193,47 @@ public class PaqueteRepository {
         }
     }
 
+    public List<Paquete> findWithFilters(String empleadoId, String clienteEmail, EstadoPaquete estado, LocalDateTime fechaInicio, LocalDateTime fechaFin) {
+        try {
+            Query query = collection();
+            
+            if (empleadoId != null && !empleadoId.isBlank()) {
+                query = query.whereEqualTo("empleadoId", empleadoId);
+            }
+            
+            if (clienteEmail != null && !clienteEmail.isBlank()) {
+                query = query.whereEqualTo("clienteEmail", clienteEmail);
+            }
+            
+            if (estado != null) {
+                query = query.whereEqualTo("estado", estado);
+            }
+            
+            if (fechaInicio != null && fechaFin != null) {
+                Timestamp inicioTimestamp = toTimestamp(fechaInicio);
+                Timestamp finTimestamp = toTimestamp(fechaFin);
+                query = query.whereGreaterThanOrEqualTo("fechaCreacion", inicioTimestamp)
+                            .whereLessThanOrEqualTo("fechaCreacion", finTimestamp);
+            } else if (fechaInicio != null) {
+                Timestamp inicioTimestamp = toTimestamp(fechaInicio);
+                query = query.whereGreaterThanOrEqualTo("fechaCreacion", inicioTimestamp);
+            } else if (fechaFin != null) {
+                Timestamp finTimestamp = toTimestamp(fechaFin);
+                query = query.whereLessThanOrEqualTo("fechaCreacion", finTimestamp);
+            }
+            
+            return query.get()
+                    .get()
+                    .getDocuments()
+                    .stream()
+                    .map(this::fromDocument)
+                    .collect(Collectors.toList());
+        } catch (InterruptedException | ExecutionException e) {
+            Thread.currentThread().interrupt();
+            throw new RuntimeException("Error al consultar paquetes con filtros", e);
+        }
+    }
+
     private List<Paquete> findByField(String field, Object value) {
         try {
             return collection()
