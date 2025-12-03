@@ -80,8 +80,8 @@ public class PaqueteService {
         Paquete paquete = new Paquete();
         paquete.setDescripcion(request.getDescripcion());
         paquete.setClienteEmail(request.getClienteEmail());
-        paquete.setDireccionOrigen(cliente.getUbicacion()); 
-        paquete.setDireccionDestino(request.getDireccionDestino());
+        paquete.setDireccionOrigen(request.getDireccionOrigen()); 
+        paquete.setDireccionDestino(cliente.getUbicacion());
         paquete.setEstado(EstadoPaquete.RECOLECTADO);
         paquete.setEmpleadoId(empleadoId);
         paquete.setUbicacion(request.getUbicacion());

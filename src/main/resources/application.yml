@@ -4,8 +4,8 @@ spring:
   
   security:
     jwt:
-      secret: ${JWT_SECRET:miClaveSecretaSuperSeguraParaJWT12345678901234567890}
-      expiration: ${JWT_EXPIRATION:86400000}
+      secret: ${JWT_SECRET}
+      expiration: ${JWT_EXPIRATION}
   
   servlet:
     multipart:
@@ -13,10 +13,10 @@ spring:
       max-request-size: 10MB
   
   mail:
-    host: ${MAIL_HOST:smtp.gmail.com}
-    port: ${MAIL_PORT:587}
-    username: ${MAIL_USERNAME:}
-    password: ${MAIL_PASSWORD:}
+    host: ${MAIL_HOST}
+    port: ${MAIL_PORT}
+    username: ${MAIL_USERNAME}
+    password: ${MAIL_PASSWORD}
     properties:
       mail:
         smtp:
@@ -29,9 +29,9 @@ spring:
           writetimeout: 5000
 
 server:
-  port: 8080
+  port: ${SERVER_PORT}
   servlet:
-    context-path: /api
+    context-path: ${SERVER_CONTEXT_PATH}
 
 logging:
   level:
@@ -41,11 +41,11 @@ logging:
 
 app:
   qr:
-    base-url: ${QR_BASE_URL:http://localhost:8080/api/paquetes}
+    base-url: ${QR_BASE_URL}
   report:
-    output-dir: ${REPORT_OUTPUT_DIR:./reports}
+    output-dir: ${REPORT_OUTPUT_DIR}
   password-reset:
-    base-url: ${PASSWORD_RESET_BASE_URL:http://localhost:8080/api/usuarios}
+    base-url: ${PASSWORD_RESET_BASE_URL}
 
 springdoc:
   api-docs:
