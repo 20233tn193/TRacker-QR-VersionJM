@@ -50,5 +50,20 @@ public class ReporteController {
             return ResponseEntity.badRequest().body(ApiResponse.error(e.getMessage()));
         }
     }
+    
+    @GetMapping("/paquete/{paqueteId}")
+    public ResponseEntity<byte[]> generarReportePaquete(@PathVariable String paqueteId) {
+        try {
+            byte[] pdf = reporteService.generarReportePaquete(paqueteId);
+            
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(MediaType.APPLICATION_PDF);
+            headers.setContentDispositionFormData("attachment", "reporte_paquete_" + paqueteId + ".pdf");
+            
+            return new ResponseEntity<>(pdf, headers, HttpStatus.OK);
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().build();
+        }
+    }
 }
 

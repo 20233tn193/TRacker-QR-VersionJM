@@ -107,11 +107,16 @@
             <version>9.2.0</version>
         </dependency>
         
-        <!-- Dotenv para cargar archivo .env -->
+        <!-- HTTP Client para Gemini API -->
         <dependency>
-            <groupId>io.github.cdimascio</groupId>
-            <artifactId>dotenv-java</artifactId>
-            <version>3.0.0</version>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-webflux</artifactId>
+        </dependency>
+        
+        <!-- JSON Processing -->
+        <dependency>
+            <groupId>com.fasterxml.jackson.core</groupId>
+            <artifactId>jackson-databind</artifactId>
         </dependency>
         
         <!-- Lombok (opcional, para reducir boilerplate) -->

@@ -12,6 +12,8 @@ public class Usuario {
     private String apellidoMaterno;
     private String ubicacion; // Municipio de Morelos
     private Role rol;
+    private String estado; // Estado de la República Mexicana
+    private String ciudad; // Ciudad del cliente
     private boolean activo;
     private int intentosFallidos;
     private Timestamp bloqueadoHasta;
@@ -94,6 +96,22 @@ public class Usuario {
             return apellidoPaterno + " " + apellidoMaterno;
         }
         return apellidoPaterno;
+    }
+    
+    public String getEstado() {
+        return estado;
+    }
+    
+    public void setEstado(String estado) {
+        this.estado = estado;
+    }
+    
+    public String getCiudad() {
+        return ciudad;
+    }
+    
+    public void setCiudad(String ciudad) {
+        this.ciudad = ciudad;
     }
     
     public Role getRol() {
