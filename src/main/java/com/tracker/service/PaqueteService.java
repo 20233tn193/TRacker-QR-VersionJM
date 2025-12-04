@@ -212,13 +212,19 @@ public class PaqueteService {
         
         Paquete paquete = paqueteOpt.get();
         
-        if (paquete.getEstado() != EstadoPaquete.EN_TRANSITO) {
-            throw new RuntimeException("El paquete debe estar en tránsito para confirmar recepción");
+        // Permitir confirmación si está EN_TRANSITO o ya ENTREGADO
+        if (paquete.getEstado() != EstadoPaquete.EN_TRANSITO && 
+            paquete.getEstado() != EstadoPaquete.ENTREGADO) {
+            throw new RuntimeException("El paquete debe estar en tránsito o entregado para confirmar recepción");
         }
         
         paquete.setConfirmadoRecepcion(true);
         paquete.setFirmaDigital(request.getFirmaDigital());
-        paquete.setEstado(EstadoPaquete.ENTREGADO);
+        
+        // Solo cambiar a ENTREGADO si aún no lo está
+        if (paquete.getEstado() != EstadoPaquete.ENTREGADO) {
+            paquete.setEstado(EstadoPaquete.ENTREGADO);
+        }
         
         paqueteRepository.save(paquete);
     }
