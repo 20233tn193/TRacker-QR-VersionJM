@@ -4,8 +4,8 @@ spring:
   
   security:
     jwt:
-      secret: ${JWT_SECRET}
-      expiration: ${JWT_EXPIRATION}
+      secret: ${JWT_SECRET:miClaveSecretaSuperSeguraParaJWT12345678901234567890}
+      expiration: ${JWT_EXPIRATION:86400000}
   
   servlet:
     multipart:
@@ -13,10 +13,10 @@ spring:
       max-request-size: 10MB
   
   mail:
-    host: ${MAIL_HOST}
-    port: ${MAIL_PORT}
-    username: ${MAIL_USERNAME}
-    password: ${MAIL_PASSWORD}
+    host: ${MAIL_HOST:smtp.gmail.com}
+    port: ${MAIL_PORT:587}
+    username: ${MAIL_USERNAME:noreply@tracker.com}
+    password: ${MAIL_PASSWORD:defaultpass}
     properties:
       mail:
         smtp:
@@ -29,9 +29,9 @@ spring:
           writetimeout: 5000
 
 server:
-  port: ${SERVER_PORT}
+  port: ${SERVER_PORT:8080}
   servlet:
-    context-path: ${SERVER_CONTEXT_PATH}
+    context-path: ${SERVER_CONTEXT_PATH:/api}
 
 logging:
   level:
@@ -41,7 +41,7 @@ logging:
 
 app:
   qr:
-    base-url: ${QR_BASE_URL}
+    base-url: ${QR_BASE_URL:http://localhost:8080/api/paquetes}
   report:
     output-dir: ./reports
   gemini:

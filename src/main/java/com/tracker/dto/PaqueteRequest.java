@@ -13,8 +13,8 @@ public class PaqueteRequest {
     private String clienteEmail;
     
     
-    @NotBlank(message = "La dirección de origen es obligatoria")
-    private String direccionOrigen;
+    @NotBlank(message = "La dirección de destino es obligatoria")
+    private String direccionDestino;
     
     private String empleadoId;
     private String ubicacion;
@@ -39,12 +39,12 @@ public class PaqueteRequest {
         this.clienteEmail = clienteEmail;
     }
     
-    public String getDireccionOrigen() {
-        return direccionOrigen;
+    public String getDireccionDestino() {
+        return direccionDestino;
     }
     
-    public void setDireccionOrigen(String direccionOrigen) {
-        this.direccionOrigen = direccionOrigen;
+    public void setDireccionDestino(String direccionDestino) {
+        this.direccionDestino = direccionDestino;
     }
     
     public String getEmpleadoId() {
